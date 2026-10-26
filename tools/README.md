@@ -11,7 +11,7 @@
 | `slidev-runtime/` | 共享 Slidev 运行时（`@slidev/cli` + 默认主题） | 本目录 `node_modules` |
 | `slidev-run.ps1` | 用共享运行时启动/构建某集 Slidev | 不写课程 `node_modules` |
 | `render-manim.ps1` | 用课程 `.venv` 渲染单个场景并复制 MP4 到 `03_slides/public/`；默认 180s 超时，超时杀进程树 | 课程 `.venv` |
-| `check-episode.py` | 检查锚点防逃逸、页数、场景、MP4、Manim API/时长、研究包；支持 `--mode` 与 `--stage research/script/slides/manim/qa` | 系统 Python / 任意 Python 3 |
+| `check-episode.py` | 检查锚点防逃逸、严格 1..N 编号、页数、场景、MP4、Manim API、ffprobe 真实时长、非空研究包；终检实际 build Slidev；支持 `--mode` 与 `--stage` | 系统 Python / 任意 Python 3 |
 | `skills/manim-isolation/` | 独立 Manim 隔离 Skill 实体（全局 junction） | 只写 `04_manim_src/scenes` |
 
 ## 2. 常用命令

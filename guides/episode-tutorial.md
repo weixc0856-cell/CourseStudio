@@ -106,7 +106,8 @@ python D:\CourseStudio\tools\check-episode.py course-attention --mode technical 
 
 - `04-course-input-brief.md` 能直接支持讲稿；
 - `06-course-outline.md` 有模块顺序；
-- `05-quality-report.md` 写明未决项。
+- `05-quality-report.md` 写明未决项；
+- `00`–`06` 必须非空；空文件会被 `--stage research` 判 FAIL。
 
 完成后更新 `handoff.md`（阶段 `research`，子步骤 `R4`，模块进度 `0/N`），建议 `/clear`（C1）。
 
@@ -145,7 +146,8 @@ python D:\CourseStudio\tools\check-episode.py course-attention --mode technical 
 ```
 
 - 中间阶段允许 `PARTIAL`（尚无 MP4），但 `Issues` 必须为空；
-- 重点看锚点是否纯净、`[SLIDE]` 是否连续、页数是否匹配。
+- `[SLIDE]` 必须严格 `01, 02, 03...`；重复、跳号、乱序会直接 FAIL；
+- 重点看锚点是否纯净、页数是否匹配。
 
 全部模块完成后更新 `handoff.md`（阶段 `script`，模块进度 `N/N`），建议 `/clear`（C2）。
 
@@ -226,13 +228,16 @@ python D:\CourseStudio\tools\check-links.py courses\course-attention
 检查项：
 
 - 锚点是否被代码块/引用/注释包裹；
+- `[SLIDE]` 是否严格 1..N，重复/跳号/乱序直接 FAIL；
 - Slidev 页数与锚点是否匹配；
 - 每个动画的 `.py` 与 `.mp4`；
-- Manim 禁用 API 与 20 秒上限；
-- 研究包完整性；
+- Manim 禁用 API；声明时长 ≤20 秒；
+- 真实 MP4 用 `ffprobe` 读取的时长 ≤20 秒；读不到时长则终检 FAIL；
+- 研究包：`course`/`technical` 的 00–06 非空；`news`/`podcast` 的 source/claim 非空且含 `FACT`/`CLAIM`；
+- `course`/`technical` 终检会实际运行 `slidev-run.ps1 -Mode build`；构建非 0 即 FAIL；
 - `handoff.md` 是否存在。
 
-若 `Issues` 非空：只修相关文件并重跑；同一问题连续 3 次修不好就停下报告，不要放宽检查或删证据。`Warnings` 逐条写入 `handoff.md`。再把浏览器检查、抽帧结果写入 `qa/`。**G5**：`Issues` 为空；状态区分 `PASS_VERIFIED` / `PASS_STATIC` / `PARTIAL` / `NOT_RUN` / `FAIL`。
+若 `Issues` 非空：只修相关文件并重跑；同一问题连续 3 次修不好就停下报告，不要放宽检查或删证据。`Warnings` 逐条写入 `handoff.md`。再把浏览器检查、抽帧结果写入 `qa/`。**G5**：`Issues` 为空，且 `course`/`technical` 的 Slidev build 实际通过；状态区分 `PASS_VERIFIED` / `PASS_STATIC` / `PARTIAL` / `NOT_RUN` / `FAIL`。
 
 ## 8. 阶段六：OBS 录制（高容错）
 
@@ -253,7 +258,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\new-ep
 
 与课程相同，但更短：
 
-- 研究：`01_research/source-register.md` + `claims-ledger.md`（或 00–06 的轻量版）；
+- 研究：`01_research/source-register.md` + `claims-ledger.md`；两项都必须非空，台账必须含 `FACT` 或 `CLAIM` 条目；
 - 讲稿：`02_scripts/lecture_script.md`，3–8 个 `[SLIDE]`；
 - 默认不做 Manim；
 - 检查：
@@ -272,7 +277,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\new-ep
 
 纯音频，不需要 Slidev/Manim：
 
-- 研究：来源登记 + 主张台账 + 提纲；
+- 研究：`source-register.md` + `claims-ledger.md` + 提纲；两项文件必须非空，台账必须含 `FACT` 或 `CLAIM`；
 - 讲稿：`02_scripts/lecture_script.md`，可不含视觉锚点；
 - 录制：OBS 音频轨或独立录音；
 - 检查：
@@ -323,12 +328,20 @@ python D:\CourseStudio\tools\check-episode.py podcast-example --mode podcast --s
 | 现象 | 处理 |
 | --- | --- |
 | `check-episode.py` 报锚点被包裹 | 把 `[SLIDE]`/`[ANIMATION]` 改成纯文本独立成行 |
+| `[SLIDE]` 重复/跳号/乱序 | 改成严格 `01, 02, 03...`，不要重复或跳号 |
+| 研究文件是 0 字节 | 补内容；空文件不能算通过 |
+| news/podcast 缺 source/claim | 同时补 `source-register.md` 与 `claims-ledger.md`，台账加 `FACT`/`CLAIM` |
 | 动画被报禁用 API | 去掉 `ThreeDScene`/`Camera3D`/粒子等，改 2D |
 | 场景声明超过 20 秒 | 拆分锚点或减少 `run_time`/`wait` |
+| 真实 MP4 超过 20 秒 | `ffprobe` 会判 FAIL；裁剪或拆分动画 |
+| `ffprobe` 不可用 | 确认 ffmpeg 的 `ffprobe` 在 PATH；终检不会放行 |
 | 渲染超 180 秒 | 脚本已杀进程树；简化场景，不要延长超时硬跑 |
+| 渲染失败 | 看控制台 `LOG=` 路径；日志会保留，不会自动删除 |
+| Slidev 构建失败 | 修 `slides.md`、视频路径或依赖；终检会实际 build |
 | Slidev 报 `markdown-it` 导出错误 | 确认 `tools/slidev-runtime` 锁定 `markdown-it@14.1.0` |
 | `slidev` 不在 PATH | 用 `slidev-run.ps1`，不要全局安装 |
 | 课程 `.venv` Python 版本不对 | `uv python pin 3.12`，删除 `.venv` 后 `uv sync` |
+| 新建集失败留下半成品 | `new-episode.ps1` 会自动回滚；残留时人工确认后删除 |
 | OBS 找不到 | 人工安装/确认；录制阶段 `NOT_RUN` |
 
 ## 13. 一页速查

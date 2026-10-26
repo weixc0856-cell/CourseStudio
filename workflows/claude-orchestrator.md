@@ -38,7 +38,7 @@
 | slides | P2 填充 | 讲稿 + 骨架 | 逐模块填充页面 | `--stage slides` |
 | manim | M1 选锚点 | 讲稿 | 选 1–2 个核心 `[ANIMATION]` | 无 |
 | manim | M2 单锚点 | `03-knowledge-structure` + 锚点上下文 | `04_manim_src/scenes/<name>.py` | `--stage manim` |
-| qa | Q1 终检 | 全包 | 修复后的文件 | `--stage qa --strict` |
+| qa | Q1 终检 | 全包 | 修复后的文件 | `--stage qa --strict`（course/technical 会真实 build Slidev） |
 | qa | Q2 视觉/浏览器 | 构建页面 | `qa/` 记录 | 人工 + 工具 |
 | recording | R 录制 | 讲稿 + 页面 | 录像/音频 | 人工 |
 
@@ -61,6 +61,8 @@ python D:\CourseStudio\tools\check-episode.py <slug> --mode <course|technical|ne
 
 - 中间阶段允许 `PARTIAL`，但 **`Issues` 必须为空**。
 - 最终 QA 加 `--strict`，要求无 `Issues`；警告逐条写入 `handoff.md`。
+- `course`/`technical` 的终检会实际运行 `slidev-run.ps1 -Mode build`；构建非 0 即 FAIL。
+- 终检还会用 `ffprobe` 校验真实 MP4 时长，并拒绝空研究文件、重复/跳号/乱序的 slide 锚点。
 - 没有实际运行检查，不得写 `PASS`。
 
 ## 5. 自检循环的上限

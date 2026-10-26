@@ -58,40 +58,57 @@ if (Test-Path $target) {
     throw "Episode already exists: $target"
 }
 
-New-Item -ItemType Directory -Force -Path $target | Out-Null
-Copy-Item -Path (Join-Path $template '*') -Destination $target -Recurse -Force
+$created = $false
+try {
+    New-Item -ItemType Directory -Force -Path $target | Out-Null
+    $created = $true
+    Copy-Item -Path (Join-Path $template '*') -Destination $target -Recurse -Force
 
-# Replace the {{EPISODE}} / {{MODE}} placeholders in text templates.
-$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-Get-ChildItem $target -Recurse -File |
-    Where-Object { $_.Extension -in '.md', '.csv', '.txt' } |
-    ForEach-Object {
-        $text = [System.IO.File]::ReadAllText($_.FullName, [System.Text.Encoding]::UTF8)
-        if ($text.Contains('{{EPISODE}}') -or $text.Contains('{{MODE}}')) {
-            $text = $text.Replace('{{EPISODE}}', $Name).Replace('{{MODE}}', $Mode)
-            [System.IO.File]::WriteAllText($_.FullName, $text, $utf8NoBom)
+    # Replace the {{EPISODE}} / {{MODE}} placeholders in text templates.
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    Get-ChildItem $target -Recurse -File |
+        Where-Object { $_.Extension -in '.md', '.csv', '.txt' } |
+        ForEach-Object {
+            $text = [System.IO.File]::ReadAllText($_.FullName, [System.Text.Encoding]::UTF8)
+            if ($text.Contains('{{EPISODE}}') -or $text.Contains('{{MODE}}')) {
+                $text = $text.Replace('{{EPISODE}}', $Name).Replace('{{MODE}}', $Mode)
+                [System.IO.File]::WriteAllText($_.FullName, $text, $utf8NoBom)
+            }
+        }
+
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'course.gitignore') -Destination (Join-Path $target '.gitignore') -Force
+
+    Push-Location $target
+    try {
+        if ($Mode -ne 'podcast') {
+            uv init --bare --python $PythonVersion
+            Assert-LastExit 'uv init'
+
+            uv python pin $PythonVersion
+            Assert-LastExit 'uv python pin'
+
+            if (-not $skipManim) {
+                uv add 'manim==0.22.0'
+                Assert-LastExit 'uv add manim==0.22.0'
+            }
         }
     }
-
-Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'course.gitignore') -Destination (Join-Path $target '.gitignore') -Force
-
-Push-Location $target
-try {
-    if ($Mode -ne 'podcast') {
-        uv init --bare --python $PythonVersion
-        Assert-LastExit 'uv init'
-
-        uv python pin $PythonVersion
-        Assert-LastExit 'uv python pin'
-
-        if (-not $skipManim) {
-            uv add manim
-            Assert-LastExit 'uv add manim'
-        }
+    finally {
+        Pop-Location
     }
 }
-finally {
-    Pop-Location
+catch {
+    $originalError = $_
+    if ($created -and (Test-Path $target)) {
+        try {
+            Remove-Item -LiteralPath $target -Recurse -Force -ErrorAction Stop
+            Write-Warning "Rolled back incomplete episode: $target"
+        }
+        catch {
+            Write-Warning "Rollback failed for $target : $($_.Exception.Message)"
+        }
+    }
+    throw $originalError
 }
 
 Write-Host ""

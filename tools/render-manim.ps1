@@ -82,11 +82,12 @@ $argLine = $argParts -join ' '
 $cmdLines = @(
     '@echo off',
     "cd /d `"$episodeDir`"",
-    "`"$uv`" $argLine > `"$logFile`" 2>&1",
+    "call `"$uv`" $argLine > `"$logFile`" 2>&1",
     "echo %ERRORLEVEL% > `"$exitFile`""
 )
 Set-Content -LiteralPath $cmdFile -Value $cmdLines -Encoding ASCII
 
+$success = $false
 Push-Location $episodeDir
 try {
     $proc = Start-Process -FilePath "cmd.exe" -ArgumentList @("/c", "`"$cmdFile`"") -NoNewWindow -PassThru
@@ -121,8 +122,18 @@ try {
     Write-Host "OUTPUT=$dest"
     Write-Host "BYTES=$bytes"
     Write-Host "STATUS=PASS_VERIFIED"
+    $success = $true
 }
 finally {
     Pop-Location
-    Remove-Item -LiteralPath $cmdFile, $logFile, $exitFile -Force -ErrorAction SilentlyContinue
+    if ($success) {
+        Remove-Item -LiteralPath $cmdFile, $logFile, $exitFile -Force -ErrorAction SilentlyContinue
+    }
+    else {
+        Remove-Item -LiteralPath $cmdFile, $exitFile -Force -ErrorAction SilentlyContinue
+        if (Test-Path $logFile) {
+            Write-Host "LOG=$logFile"
+            Write-Host "Render failed; log preserved for troubleshooting."
+        }
+    }
 }

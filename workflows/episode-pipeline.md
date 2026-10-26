@@ -146,7 +146,8 @@ $P download arxiv 1706.03762 -o 01_research/downloads
 - 每条关键主张有 `CLM-XXX` 与页码级定位；
 - 区分 `FACT` / `CLAIM` / `INFERENCE` / `ASSUMPTION`；
 - 冲突保留双方证据与适用范围；
-- `05-quality-report.md` 写明 `NOT_RUN` / `PARTIAL`。
+- `05-quality-report.md` 写明 `NOT_RUN` / `PARTIAL`；
+- 文件必须非空：`course`/`technical` 检查 `00`–`06`；`news`/`podcast` 必须同时有非空 `source-register.md` 与 `claims-ledger.md`，且台账含 `FACT` 或 `CLAIM`。
 
 **Gate G1**：
 
@@ -269,10 +270,13 @@ python D:\CourseStudio\tools\check-links.py courses\<slug>
 `check-episode.py` 检查：
 
 - 讲稿锚点是否被代码块/引用块/注释包裹（包裹即 FAIL）；
+- `[SLIDE: NN]` 是否严格按 1..N 递增；重复、跳号、乱序均 FAIL；
 - Slidev 页数（`news`/`podcast` 可无 Slidev）；
 - 每个动画的 `.py` 与 `.mp4`；
 - Manim 场景是否使用禁用 API、声明时长是否超过 20 秒；
-- 研究包完整性（按 `--mode` 区分 00–06 与 source/claim ledger）；
+- 真实 MP4 用 `ffprobe` 读取时长；超过 20 秒 FAIL；无法读取时终检 FAIL；
+- 研究包完整性：`course`/`technical` 的 00–06 必须非空；`news`/`podcast` 的 source/claim 必须非空且台账含 `FACT`/`CLAIM`；
+- `course`/`technical` 在 `--stage qa --strict` 下会实际运行 `slidev-run.ps1 -Mode build`；构建非 0 即 FAIL；
 - `handoff.md` 是否存在。
 
 再执行：
@@ -282,7 +286,7 @@ python D:\CourseStudio\tools\check-links.py courses\<slug>
 - 观众版泄漏扫描；
 - 将命令、退出码、结果写入 `qa/`。
 
-**Gate G5**：`check-episode.py --mode <mode> --stage qa --strict` 通过；QA 报告区分 `PASS_VERIFIED` / `PASS_STATIC` / `PARTIAL` / `NOT_RUN` / `FAIL`。
+**Gate G5**：`check-episode.py --mode <mode> --stage qa --strict` 返回 0 且 `Issues` 为空；`course`/`technical` 的 Slidev build 必须实际通过；QA 报告区分 `PASS_VERIFIED` / `PASS_STATIC` / `PARTIAL` / `NOT_RUN` / `FAIL`。
 
 ### Stage 6 — OBS 录制（人工，高容错）
 
@@ -331,9 +335,16 @@ python D:\CourseStudio\tools\check-links.py courses\<slug>
 | 现象 | 处理 |
 | --- | --- |
 | 锚点被包在代码块/引用块/注释里 | `check-episode.py` 判 FAIL；把锚点改成纯文本独立成行 |
+| `[SLIDE]` 重复、跳号或乱序 | 判 FAIL；改成严格 `01, 02, 03...`，不要重复编号 |
+| 研究文件存在但为 0 字节 | 判 FAIL；补内容，不要留占位空文件 |
+| news/podcast 缺 source/claim 或台账无 `FACT`/`CLAIM` | 判 FAIL；补 `source-register.md`、`claims-ledger.md` 与条目 |
 | Manim 使用 `ThreeDScene`/`Camera3D`/粒子等 | `check-episode.py` 列出禁用 API；改回基础 2D 几何与文本 |
 | 单场景声明时长超过 20 秒 | `check-episode.py` 判 FAIL；拆分锚点或减少 `run_time`/`wait` |
+| 真实 MP4 时长超过 20 秒 | `ffprobe` 判 FAIL；裁剪视频或拆分动画 |
+| `ffprobe` 不可用 | 终检/动画阶段判 FAIL；确认 ffmpeg 的 `ffprobe` 在 PATH |
 | 渲染超过 180 秒 | `render-manim.ps1` 杀掉进程树；简化场景，不要靠超时硬跑 |
+| 渲染失败 | 日志会保留；按控制台 `LOG=` 路径查看，不要反复重跑掩盖错误 |
+| Slidev 构建失败 | `--stage qa --strict` 判 FAIL；修 `slides.md`、视频路径或依赖后重跑 |
 | Slidev 构建报 `markdown-it` 导出错误 | 确认 `tools/slidev-runtime/package.json` 锁定 `markdown-it@14.1.0` |
 | `slidev` 命令不存在 | 用 `slidev-run.ps1`，不要全局安装；运行时在 `tools/slidev-runtime` |
 | Manim 渲染找不到输出 | 检查 `--media_dir` 与 `--output_file`；`render-manim.ps1` 会递归查找 |
@@ -341,6 +352,7 @@ python D:\CourseStudio\tools\check-links.py courses\<slug>
 | 讲稿/课件阶段报 missing MP4 | 用 `--stage script` 或 `--stage slides`，不要加 `--strict`；MP4 属于 Stage 4 |
 | 中间阶段状态是 PARTIAL | 正常；只要 `Issues` 为空即可继续，`Warnings` 记入 `handoff.md` |
 | 课程 `.venv` 用了错误 Python 版本 | `uv python pin 3.12` 后重建 `.venv`；新集由 `new-episode.ps1` 固定 3.12 |
+| 新建集失败留下半成品目录 | `new-episode.ps1` 会自动回滚；若仍残留，人工确认后删除 |
 | 研究包缺文件 | 回 Stage 1；不要用模型记忆补 |
 | OBS 未安装 | 人工安装/确认；录制阶段 `NOT_RUN` |
 

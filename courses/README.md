@@ -11,7 +11,7 @@
 | `news` | 新闻/行业解读 | `01_research` 来源/台账、`02_scripts`、`qa/` | `03_slides`（3–8 页） |
 | `podcast` | 纯音频播客 | `01_research` 来源/台账、`02_scripts`、`qa/` | 无 Slidev/Manim |
 
-`check-episode.py --mode` 按模式检查；新闻与播客不要求 Slidev/Manim，但不能跳过来源登记与主张台账。
+`check-episode.py --mode` 按模式检查；新闻与播客不要求 Slidev/Manim，但不能跳过来源登记与主张台账。`source-register.md` 与 `claims-ledger.md` 必须同时存在且非空，台账必须含 `FACT` 或 `CLAIM` 条目。
 
 ## 1. 命名
 
@@ -23,7 +23,7 @@
 | 新闻解读 | `news-<slug>-<YYYYMM>/` | `news-ai-chip-export-202610/` |
 | 技术/论文解读 | `technical-<slug>/` | `technical-flashattention/` |
 | 纯研究输入 | `<topic>-research-<YYYY-MM>/` | `attention-research-2026-10/` |
-| 冒烟测试 | `zz-<purpose>/` | `zz-smoke-test/` |
+| 冒烟测试 | `zz-<purpose>/` | `zz-tmp-test/` |
 
 已有目录不强制改名；新目录按上表执行。一个项目只使用一种布局，不混用。新项目默认使用 **B（Episode + Slidev + Manim 隔离）**；只有明确不需要 Slidev 时才用 A。
 
@@ -92,16 +92,16 @@ course-<slug>/
 - 提交：源码、`uv.lock`、`.python-version`、研究台账、检索 JSON、QA 报告、口播稿、`handoff.md`。
 - 不提交：PDF 全文、`01_research/downloads/`、`fulltext/`、`03_slides/public/*.mp4`、`04_manim_src/media/`、`dist/`、`.venv*/`、`node_modules/`、`.pnpm-store/`、`.env`、密钥。
 - 大体积成片与授权素材放仓库外或 Git LFS。
+- 远程仓库、克隆重建与推送流程见 [guides/repository-and-remote.md](../guides/repository-and-remote.md)。
 
 ## 5. 现有项目
 
 | 目录 | 类型 | 布局 | 状态 |
 | --- | --- | --- | --- |
-| `transformer-course-pilot/` | 课程试点 | A（HTML + Manim） | 已完成试点，见其 `qa/` |
-| `attention-research-2026-10/` | 纯研究输入 | 研究包在根目录 | 研究输入测试完成 |
-| `zz-smoke-test/` | 冒烟测试 | A | 不作为交付物 |
+| `transformer-course-pilot/` | 课程试点 | A（HTML + Manim） | 源码、QA 报告与渲染保留；`.venv` 与浏览器 profile 已清理，可 `uv sync` 重建 |
+| `attention-research-2026-10/` | 纯研究输入 | 研究包在根目录 | 00–06、检索 JSON 与台账保留；PDF/全文已清理 |
 
-这些目录默认不在根仓库中；需要版本管理时，在各自目录内 `git init`。
+这些目录默认不在根仓库中；需要版本管理时，在各自目录内 `git init`。已删除的冒烟测试 `zz-smoke-test` 不再保留。
 
 ## 6. 相关文档
 

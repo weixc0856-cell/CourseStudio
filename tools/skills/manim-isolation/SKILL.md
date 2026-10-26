@@ -103,6 +103,8 @@ class NavierStokes(Scene):
 ## 6. 失败处理
 
 - 渲染报错：读完整 traceback，只修对应 `<name>.py`；不要改其他文件。
+- 渲染失败时日志会保留；按控制台 `LOG=` 路径查看完整输出，不要靠反复重跑掩盖错误。
+- 终检会用 `ffprobe` 读取真实 MP4 时长；超过 20 秒判 FAIL。
 - 缺少 Manim：报告 `pyproject.toml` / `.venv` 状态，建议在课程内 `uv add manim`；不要全局安装。
 - 输出找不到：检查 `--output_file` 与 `--media_dir`；渲染日志会给出实际路径。
 - 公式不一致：回到 `03-knowledge-structure.md` 核对，不在动画里“猜”。

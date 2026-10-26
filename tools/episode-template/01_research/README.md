@@ -24,3 +24,12 @@
 - `downloads/`：PDF（不提交）
 - `fulltext/`：逐页文本（不提交）
 - `scripts/`：抽取与核验脚本（提交）
+
+## news / podcast
+
+不使用 00–06 时，必须提供：
+
+- `source-register.md`（非空）
+- `claims-ledger.md`（非空，且含 `FACT` 或 `CLAIM` 条目）
+
+`check-episode.py --mode news|podcast --stage research` 会严格检查这两个文件。

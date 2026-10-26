@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -98,24 +100,97 @@ def lint_scene(path: Path) -> dict:
     }
 
 
+def is_nonempty(path: Path) -> bool:
+    """True only for an existing text file with non-whitespace content."""
+    try:
+        if not path.is_file() or path.stat().st_size <= 0:
+            return False
+        return bool(path.read_text(encoding="utf-8", errors="replace").strip())
+    except OSError:
+        return False
+
+
 def research_status(episode: Path, mode: str) -> tuple[bool, str]:
-    """Return (ok, human-readable detail) for the research package."""
+    """Validate research files by presence, non-empty content and ledger keywords."""
     research_dir = episode / "01_research"
     if mode in {"course", "technical"}:
-        missing = [name for name in RESEARCH_FILES if not (research_dir / name).exists()]
+        missing = [name for name in RESEARCH_FILES if not (research_dir / name).is_file()]
+        empty = [name for name in RESEARCH_FILES if (research_dir / name).is_file() and not is_nonempty(research_dir / name)]
+        if missing or empty:
+            parts = []
+            if missing:
+                parts.append("missing: " + ", ".join(missing))
+            if empty:
+                parts.append("empty: " + ", ".join(empty))
+            return False, "research package invalid: " + "; ".join(parts)
+        return True, "00-06 present and non-empty"
+
+    required = ["source-register.md", "claims-ledger.md"]
+    missing = [name for name in required if not (research_dir / name).is_file()]
+    empty = [name for name in required if (research_dir / name).is_file() and not is_nonempty(research_dir / name)]
+    if missing or empty:
+        parts = []
         if missing:
-            return False, "research package incomplete: " + ", ".join(missing)
-        return True, "00-06 present"
-    candidates = [
-        "source-register.md",
-        "claims-ledger.md",
-        "02-claim-evidence-ledger.csv",
-        "00-task-brief.md",
-    ]
-    present = [name for name in candidates if (research_dir / name).exists()]
-    if present:
-        return True, "present: " + ", ".join(present)
-    return False, "no source-register/claims-ledger under 01_research/"
+            parts.append("missing: " + ", ".join(missing))
+        if empty:
+            parts.append("empty: " + ", ".join(empty))
+        return False, "news/podcast research invalid: " + "; ".join(parts)
+
+    ledger = (research_dir / "claims-ledger.md").read_text(encoding="utf-8", errors="replace")
+    if not re.search(r"\b(?:FACT|CLAIM)\b", ledger, re.IGNORECASE):
+        return False, "claims-ledger.md contains no FACT/CLAIM entries"
+    return True, "source-register.md + claims-ledger.md (FACT/CLAIM present)"
+
+
+def probe_duration(mp4: Path) -> tuple[float | None, str]:
+    """Read real media duration with ffprobe; return (seconds, error)."""
+    ffprobe = shutil.which("ffprobe")
+    if not ffprobe:
+        return None, "ffprobe not found on PATH"
+    try:
+        proc = subprocess.run(
+            [
+                ffprobe, "-v", "error",
+                "-show_entries", "format=duration",
+                "-of", "default=noprint_wrappers=1:nokey=1",
+                str(mp4),
+            ],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=15,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return None, f"ffprobe failed: {exc}"
+    if proc.returncode != 0:
+        return None, f"ffprobe exit {proc.returncode}: {proc.stderr.strip()[:200]}"
+    raw = proc.stdout.strip()
+    try:
+        return float(raw), ""
+    except ValueError:
+        return None, f"unparseable ffprobe duration: {raw!r}"
+
+
+def run_slidev_build(root: Path, slug: str) -> tuple[bool, int | None, str]:
+    """Run the real Slidev build for final QA."""
+    script = root / "tools" / "slidev-run.ps1"
+    if not script.is_file():
+        return False, None, f"missing build script: {script}"
+    powershell = shutil.which("powershell") or shutil.which("pwsh")
+    if not powershell:
+        return False, None, "PowerShell not found on PATH"
+    try:
+        proc = subprocess.run(
+            [
+                powershell, "-NoProfile", "-ExecutionPolicy", "Bypass",
+                "-File", str(script), "-Episode", slug, "-Mode", "build",
+            ],
+            cwd=str(root), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300,
+        )
+    except subprocess.TimeoutExpired:
+        return False, None, "Slidev build timed out after 300s"
+    except OSError as exc:
+        return False, None, f"Slidev build failed to start: {exc}"
+    output = ((proc.stdout or "") + (proc.stderr or "")).strip()
+    tail = "\n".join(output.splitlines()[-20:])
+    return proc.returncode == 0, proc.returncode, tail
 
 
 def main() -> int:
@@ -127,7 +202,7 @@ def main() -> int:
         "--stage", choices=["research", "script", "slides", "manim", "qa"], default="qa",
         help="Only enforce what this stage is expected to have produced.",
     )
-    parser.add_argument("--strict", action="store_true", help="Final QA: missing scenes/MP4s fail")
+    parser.add_argument("--strict", action="store_true", help="Final QA: missing scenes/MP4s fail and Slidev build must pass")
     parser.add_argument("--json", action="store_true", help="Print machine-readable JSON")
     args = parser.parse_args()
 
@@ -204,12 +279,17 @@ def main() -> int:
         (issues if stage in {"slides", "manim", "qa"} else warnings).append(
             "slide anchors exist but 03_slides/slides.md is missing"
         )
-    if slide_anchors and slide_count and max(slide_anchors) > slide_count:
-        issues.append(
-            f"slide anchor {max(slide_anchors)} exceeds Slidev slide count {slide_count}"
-        )
-    if slide_anchors and sorted(set(slide_anchors)) != list(range(1, max(slide_anchors) + 1)):
-        warnings.append("slide anchors are not a contiguous 1..N sequence")
+    if slide_anchors:
+        expected = list(range(1, len(slide_anchors) + 1))
+        if slide_anchors != expected:
+            issues.append(
+                "slide anchors must be strictly 1..N with no duplicates, gaps or out-of-order entries; found "
+                + ", ".join(str(x) for x in slide_anchors)
+            )
+        if slide_count and slide_anchors[-1] > slide_count:
+            issues.append(
+                f"slide anchor {slide_anchors[-1]} exceeds Slidev slide count {slide_count}"
+            )
 
     animations = []
     for name in sorted(set(anim_anchors)):
@@ -236,10 +316,33 @@ def main() -> int:
                 )
         if not item["mp4_exists"]:
             (issues if asset_is_issue else warnings).append(f"missing MP4 for {name}")
+            item["real_duration"] = None
+            item["duration_probe_error"] = "mp4 missing"
+        else:
+            real_duration, probe_error = probe_duration(mp4)
+            item["real_duration"] = real_duration
+            item["duration_probe_error"] = probe_error
+            if real_duration is None:
+                (issues if asset_is_issue else warnings).append(
+                    f"{name}: real MP4 duration NOT_VERIFIED ({probe_error})"
+                )
+            elif real_duration > MAX_SCENE_SECONDS:
+                issues.append(
+                    f"{name}: real MP4 duration {real_duration:.2f}s exceeds {MAX_SCENE_SECONDS:.0f}s"
+                )
         animations.append(item)
 
     if not handoff:
         warnings.append("missing handoff.md")
+
+    build_info = {"ran": False, "exit_code": None, "output_tail": ""}
+    if stage == "qa" and args.strict and args.mode in {"course", "technical"} and slides_text:
+        build_ok, build_code, build_output = run_slidev_build(root, args.episode)
+        build_info = {"ran": True, "exit_code": build_code, "output_tail": build_output}
+        if not build_ok:
+            issues.append(
+                f"Slidev build failed (exit {build_code}):\n{build_output}"
+            )
 
     status = "FAIL" if issues else ("PASS_VERIFIED" if not warnings else "PARTIAL")
     result = {
@@ -255,6 +358,7 @@ def main() -> int:
         "escaped_anchors": escaped,
         "animations": animations,
         "handoff": handoff,
+        "slidev_build": build_info,
         "issues": issues,
         "warnings": warnings,
     }
@@ -267,6 +371,9 @@ def main() -> int:
         print(f"Research: {'OK' if research_ok else 'MISSING'} ({research_detail})")
         print(f"Slides:  {slide_count} slide(s), anchors {slide_anchors or 'none'}")
         print(f"Anims:   {sorted(set(anim_anchors)) or 'none'}")
+        if build_info["ran"]:
+            build_status = "PASS" if build_info["exit_code"] == 0 else "FAIL"
+            print(f"Build:   {build_status} (exit {build_info['exit_code']})")
         for a in animations:
             lint = a["lint"]
             lint_text = "n/a"
@@ -274,6 +381,10 @@ def main() -> int:
                 lint_text = "OK" if not lint["forbidden"] else f"FORBIDDEN {lint['forbidden']}"
                 if lint["duration_estimated"]:
                     lint_text += f", ~{lint['duration_hint']}s"
+            if a.get("real_duration") is not None:
+                lint_text += f", real={a['real_duration']:.2f}s"
+            elif a.get("mp4_exists"):
+                lint_text += ", real=UNVERIFIED"
             print(
                 f"  - {a['name']}: scene={'OK' if a['scene_exists'] else 'MISSING'}, "
                 f"mp4={'OK' if a['mp4_exists'] else 'MISSING'}, lint={lint_text}"

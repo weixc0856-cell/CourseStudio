@@ -118,7 +118,7 @@ courses/<slug>/
 - 课程仓库不提交：PDF 全文、`01_research/downloads/`、`fulltext/`、`03_slides/public/*.mp4`、`04_manim_src/media/`、`dist/`、`.venv/`、`node_modules/`、`.pnpm-store/`、`.env` 与密钥。
 - 大体积成片与授权素材放仓库外或 Git LFS。
 - `tools/paper-search-mcp` 是外部仓库；如果根仓库要跟踪它，使用 submodule，不要直接嵌入 `.git`。
-- 完整边界见 [episode-pipeline.md](workflows/episode-pipeline.md) 与 [tools/README.md](tools/README.md)。
+- 完整边界见 [episode-pipeline.md](workflows/episode-pipeline.md) 与 [tools/README.md](tools/README.md)；远程与克隆流程见 [guides/repository-and-remote.md](guides/repository-and-remote.md)。
 
 ## 质量与状态
 
@@ -131,6 +131,8 @@ courses/<slug>/
 - `FAIL`：实际失败
 
 程序检查通过只证明程序检查通过。内容正确性、视觉质量和教学效果是不同层次的判断；没有人工评审或学习者测试时，不要写成“已验证”。
+
+`--stage qa --strict` 在 `course`/`technical` 下会实际运行 Slidev build；构建失败、ffprobe 时长超限、研究文件为空或 slide 编号重复/跳号，都不能算通过。
 
 ## 开始一次新任务
 
@@ -162,7 +164,7 @@ courses/<slug>/
 | 真实 Episode | `NOT_RUN` | 尚未跑第一集真实课程 |
 | 新闻/播客模式 | `PASS_STATIC` | 脚手架与检查器已支持；未跑真实项目 |
 
-现有目录：`transformer-course-pilot`（HTML 试点）、`attention-research-2026-10`（研究输入测试）、`zz-smoke-test`（冒烟测试）。按默认布局，它们不在根仓库中；各自独立管理。
+现有目录：`transformer-course-pilot`（HTML 试点）、`attention-research-2026-10`（研究输入测试）。`transformer-course-pilot` 的 `.venv` 与浏览器 profile 已清理，按需 `uv sync` 重建；`attention-research` 的 PDF/全文已清理，保留研究文档与检索 JSON。按默认布局，它们不在根仓库中；需要版本管理时在各自目录 `git init`。
 
 ## 当前能力与已知限制
 
@@ -177,6 +179,7 @@ courses/<slug>/
 - [guides/audience-vs-internal.md](guides/audience-vs-internal.md)：观众版、教学限定与内部 QA 的边界
 - [guides/delivery-quality.md](guides/delivery-quality.md)：内容、准确性、视觉、可复现性与人工审查
 - [guides/episode-tutorial.md](guides/episode-tutorial.md)：课程 / 新闻 / 播客的分场景使用教程
+- [guides/repository-and-remote.md](guides/repository-and-remote.md)：远程仓库、忽略规则、克隆重建与推送流程
 - [courses/README.md](courses/README.md)：课程/新闻产物根目录、命名与两种布局
 - [workflows/episode-pipeline.md](workflows/episode-pipeline.md)：默认流程（Episode + Slidev + Manim 隔离）
 - [workflows/claude-orchestrator.md](workflows/claude-orchestrator.md)：分块状态机、每轮模板、停点与 `/clear` 规则

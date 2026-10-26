@@ -69,6 +69,16 @@
 - **交接字段**：`handoff.md` 增加阶段、子步骤、模块进度、动画进度、最后检查。
 - **教程重写**：研究 R1–R4、讲稿 S1–S3、课件 P1–P2、动画 M1–M2、终检 Q1–Q2 的分轮 prompt。
 
+### v1.3 增量（严格校验与真实构建）
+
+- **严格 slide 编号**：`[SLIDE]` 必须严格 1..N；重复、跳号、乱序直接 FAIL。
+- **研究非空**：`course`/`technical` 的 00–06 必须非空；`news`/`podcast` 的 `source-register.md` 与 `claims-ledger.md` 必须同时存在、非空，且台账含 `FACT`/`CLAIM`。
+- **真实时长**：有 MP4 时用 `ffprobe` 读取真实时长；超过 20 秒 FAIL；读不到时长时动画/终检 FAIL。
+- **真实构建**：`course`/`technical` 的 `--stage qa --strict` 实际运行 `slidev-run.ps1 -Mode build`，非 0 即 FAIL。
+- **渲染日志**：`render-manim.ps1` 失败时保留日志并打印 `LOG=` 路径；成功才清理。
+- **版本锁定**：`new-episode.ps1` 使用 `uv add manim==0.22.0`。
+- **事务回滚**：`new-episode.ps1` 初始化失败时删除半成品课程目录。
+
 ## 1. 名称归一化结果
 
 方法：扫描 `%USERPROFILE%\.claude\skills\*\SKILL.md` 的 `name:` 字段；对 ZIP 解包后比对文件；解析 `%USERPROFILE%\.claude.json` 的 `mcpServers`；用命令探测运行时。
@@ -94,7 +104,7 @@
 | 阶段二：讲稿 | course-studio | `PASS_STATIC` | Skill 已注册，references 完整；本审计未运行完整讲稿生产 |
 | 阶段二：润色 | humanizer | `PASS_STATIC` | 可选；本次未调用 |
 | 阶段三：静态课件 | slidev | `PARTIAL` | Skill 完整；`slidev` CLI、项目依赖未安装；无 `package.json` / `slides.md` |
-| 阶段三：动画 | course-studio + Manim | `PASS_VERIFIED`（运行时） | `courses/transformer-course-pilot/.venv` 中 Manim 0.22.0 可执行 |
+| 阶段三：动画 | course-studio + Manim | `PASS_VERIFIED`（历史） | 2026-10-26 在 pilot `.venv` 验证 Manim 0.22.0；该 `.venv` 已在清理中删除，按需 `uv sync` 重建 |
 | 阶段三：动画隔离 | manim-isolation | `BLOCKED` | 没有独立 Skill；ZIP 不是隔离 Skill，且与 `course-studio` 重名 |
 | 阶段四：录制 | OBS | `NOT_RUN` | 未在 PATH、Program Files、LocalAppData 常规路径检测到 `obs64.exe`；需人工确认 |
 | 辅助：视频处理 | ffmpeg | `PASS_VERIFIED` | 8.1 可用 |
