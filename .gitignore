@@ -5,7 +5,7 @@
 #   - 根仓库只跟踪“框架”：CLAUDE.md、README、guides/、workflows/、prompts/、tools/。
 #   - 每门课程在 courses/<slug>/ 内独立 `git init`；课程文档、研究台账、页面、
 #     动画源码由课程自己的 .gitignore（tools/course.gitignore）管理。
-#   - 因此根仓库忽略 /courses/*，只保留 courses/README.md。
+#   - 因此根仓库默认忽略 /courses/*；当前例外是 transformer-self-attention 源码。
 #
 # 课程仓库内的原则：
 #   - 提交：源码、锁文件、研究台账、QA 报告、页面与动画源码。
@@ -14,10 +14,34 @@
 # =============================================================================
 
 # --- 仓库布局 ---------------------------------------------------------------
-# 根仓库不跟踪课程与实验目录；课程各自是独立仓库。
+# 默认忽略课程与实验目录；当前唯一活跃源码例外是 transformer-self-attention。
+# 大产物/可再生物仍由下方规则和课程自己的 .gitignore 忽略。
 /courses/*
 !/courses/README.md
+!/courses/transformer-self-attention/
+
+# _retired 只放行说明文件，不把旧课程大件带进根仓库。
+!/courses/_retired/
+/courses/_retired/*
+!/courses/_retired/README.md
+
 /labs/
+
+# --- 活跃课程产物边界（源码进库，依赖/缓存/渲染/录像/全文不进库）---------
+courses/**/node_modules/
+courses/**/.venv/
+courses/**/04_motion_src/node_modules/
+courses/**/04_motion_src/output/
+courses/**/04_motion_src/dist/
+courses/**/04_motion_src/.vite/
+courses/**/04_motion_src/**/*.meta
+courses/**/03_slides/.vendor/
+courses/**/03_slides/dist/
+courses/**/05_recording/recordings/
+courses/**/01_research/downloads/
+courses/**/01_research/fulltext/
+courses/**/qa/chrome-profile*/
+courses/**/.env
 
 # --- 密钥与本地配置 ---------------------------------------------------------
 .env

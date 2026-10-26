@@ -106,7 +106,19 @@ research/**/*.stderr.txt
 03_slides/public/*.webm
 03_slides/public/*.wav
 03_slides/public/*.mp3
+
+# --- Reveal.js ---------------------------------------------------------------
+03_slides/.vendor/
 04_manim_src/media/
+
+# --- Motion Canvas / 录制就绪包 ---------------------------------------------
+# 每集自己的依赖与渲染中间产物；录制视频只保留本地，不进 Git。
+04_motion_src/node_modules/
+04_motion_src/output/
+04_motion_src/dist/
+04_motion_src/.vite/
+04_motion_src/**/*.meta
+05_recording/recordings/
 
 # --- QA / 浏览器 / 渲染中间产物 --------------------------------------------
 qa/chrome-profile/
