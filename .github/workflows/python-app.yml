@@ -21,3 +21,6 @@ jobs:
     - name: Run Link Checker
       run: |
         python tools/check-links.py .
+    - name: Run Negative Tests
+      run: |
+        python tools/test_check_episode_negative.py

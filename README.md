@@ -161,10 +161,10 @@ courses/<slug>/
 | `manim-isolation` | `PASS_VERIFIED` | 项目内 Skill + 全局 junction |
 | OBS | `NOT_RUN` | 常规路径未检测到；录制为人工阶段 |
 | Playwright PDF 导出 | `NOT_RUN` | 未安装；不影响 Slidev dev/build |
-| 真实 Episode | `NOT_RUN` | 尚未跑第一集真实课程 |
+| 真实 Episode | `NOT_RUN` | 新 Episode 流程尚未跑第一集；`transformer-course-pilot` 是历史 HTML 试点（源码/QA/渲染保留，环境已清理），不代表新流程验收 |
 | 新闻/播客模式 | `PASS_STATIC` | 脚手架与检查器已支持；未跑真实项目 |
 
-现有目录：`transformer-course-pilot`（HTML 试点）、`attention-research-2026-10`（研究输入测试）。`transformer-course-pilot` 的 `.venv` 与浏览器 profile 已清理，按需 `uv sync` 重建；`attention-research` 的 PDF/全文已清理，保留研究文档与检索 JSON。按默认布局，它们不在根仓库中；需要版本管理时在各自目录 `git init`。
+现有目录：`transformer-course-pilot`（历史 HTML 试点；源码、QA 报告与渲染保留，`.venv` 与浏览器 profile 已清理，可按需 `uv sync` 重建）、`attention-research-2026-10`（研究输入测试；00–06、检索 JSON 与台账保留，PDF/全文已清理）。按默认布局，它们不在根仓库中；需要版本管理时在各自目录 `git init`。
 
 ## 当前能力与已知限制
 

@@ -101,7 +101,7 @@ course-<slug>/
 | `transformer-course-pilot/` | 课程试点 | A（HTML + Manim） | 源码、QA 报告与渲染保留；`.venv` 与浏览器 profile 已清理，可 `uv sync` 重建 |
 | `attention-research-2026-10/` | 纯研究输入 | 研究包在根目录 | 00–06、检索 JSON 与台账保留；PDF/全文已清理 |
 
-这些目录默认不在根仓库中；需要版本管理时，在各自目录内 `git init`。已删除的冒烟测试 `zz-smoke-test` 不再保留。
+这些目录默认不在根仓库中；需要版本管理时，在各自目录内 `git init`。
 
 ## 6. 相关文档
 

@@ -117,7 +117,7 @@ python D:\CourseStudio\tools\check-links.py courses\<slug>
 
 | 类型 | 例子 | 说明 |
 | --- | --- | --- |
-| 测试/冒烟项目 | `zz-smoke-test/`、`zz-*/` | 无正式交付内容 |
+| 测试/冒烟项目 | `zz-tmp-test/`、`zz-*/` | 无正式交付内容 |
 | 课程虚拟环境 | `courses/<slug>/.venv` | 用 `uv sync` 重建 |
 | 浏览器验收缓存 | `qa/chrome-profile*` | 可重新生成 |
 | 构建产物 | `03_slides/dist/`、`animations/rendered/`、`04_manim_src/media/` | 由源码重建 |
