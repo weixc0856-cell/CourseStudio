@@ -4,15 +4,15 @@
 
 - 版本：2026-10-26
 - 适用：`D:\CourseStudio\courses\<slug>` 下的课程、新闻、播客与技术解读
-- 配套：[workflows/episode-pipeline.md](../workflows/episode-pipeline.md)、[guides/episode-tutorial.md](episode-tutorial.md)、[guides/repository-and-remote.md](repository-and-remote.md)
+- 配套：[guides/quickstart-episode.md](quickstart-episode.md)、[workflows/episode-pipeline.md](../workflows/episode-pipeline.md)、[guides/episode-tutorial.md](episode-tutorial.md)、[guides/repository-and-remote.md](repository-and-remote.md)
 
 ## 1. 仓库与目录
 
 | 要求 | 规则 |
 | --- | --- |
 | 产物根目录 | 统一放在 `D:\CourseStudio\courses\<slug>` |
-| 根仓库范围 | 只跟踪框架：`CLAUDE.md`、`README.md`、`guides/`、`workflows/`、`prompts/`、`tools/` |
-| 课程仓库 | 每门课程在 `courses/<slug>` 内独立 `git init`；根仓库忽略 `/courses/*`，仅保留 `courses/README.md` |
+| 根仓库范围 | 默认只跟踪框架：`CLAUDE.md`、`README.md`、`guides/`、`workflows/`、`prompts/`、`tools/`；例外：`courses/transformer-self-attention/` 源码 |
+| 课程仓库 | 每门课程在 `courses/<slug>` 内独立 `git init`；根仓库默认忽略 `/courses/*`。例外：`courses/transformer-self-attention/` 源码进根仓库，`_retired/` 仅放行 README |
 | 实验环境 | `labs/` 不进根仓库；不是课程交付物 |
 | 禁止提交 | `.env`、密钥、PDF 全文、`01_research/downloads/`、`fulltext/`、`03_slides/public/*.mp4`、`04_manim_src/media/`、`dist/`、`.venv*/`、`node_modules/`、`.pnpm-store/` |
 
@@ -48,6 +48,7 @@
 | 禁止包裹 | 不得放在代码块（三反引号）、引用块（`>`）或 HTML 注释（`<!-- -->`）中 |
 | 与页面映射 | 幻灯片总数 `N`，独立锚点数 `M`；允许 `N >= M`（封面/目录/封底可无锚点），但必须输出映射报告；`M > N` 直接 FAIL |
 | 分块写作 | 按大纲模块 1–2 个/轮追加；不要一次写完再检查 |
+| 节奏标注 | 每个 motion `[ANIMATION: name]` 配一个 `[SEGMENT: name | NNs | order=N]`；至少各一条 `[HOLD]` / `[EMPHASIS]` / `[CUT]`；时间戳严格递增且不超过声明时长 |
 
 检查：`python D:\CourseStudio\tools\check-episode.py <slug> --mode <mode> --stage script`
 
@@ -57,21 +58,39 @@
 Mapping: 8 anchor(s), 10 slide(s), buffer 2 (N >= M allowed)
 ```
 
-`M > N` 时输出 `slide anchors M exceed Slidev slide count N` 并 FAIL。
+`M > N` 时输出 `slide anchors M exceed Slidev/Reveal slide count N` 并 FAIL。
 
-## 4. Slidev 课件
+## 4. 课件（Reveal 默认 / Slidev 兼容）
+
+### 4.1 Reveal（course 默认）
+
+| 要求 | 规则 |
+| --- | --- |
+| 文件 | `03_slides/index.html` |
+| 页序 | 每页 `<section class="c-slide" data-slide="01">…</section>`；`data-slide` 严格 1..N，按文档顺序 |
+| 配置 | `width:1920, height:1080, margin:0, center:false, controls:false, progress:false, slideNumber:false, transition:'none', hash:true` |
+| 主题 | `theme/white.css` + `assets/deck.css`；麦肯锡橙白，不使用远程字体/脚本 |
+| 资源 | 本地 `src`/`href` 必须存在；`.vendor/reveal` 由 `reveal-run.ps1` 同步，不提交 |
+| 动画 | 动画页只放占位与前后衔接说明；不嵌 MP4；动画由 `record.html?segment=<name>` 独立录制 |
+| 构建 | Reveal 无构建步骤；`--stage qa --strict` 跳过 Slidev build |
+
+检查：`--stage slides`。先运行 `tools/reveal-run.ps1` 同步 `.vendor`（可另开终端），再跑 checker；缺 `data-slide`、页序跳号、本地资源缺失均 FAIL。
+
+### 4.2 Slidev（technical/news/旧课）
 
 | 要求 | 规则 |
 | --- | --- |
 | 文件 | `03_slides/slides.md` |
 | 分步 | P1 只建标题/分页骨架 → P2 逐模块填充 |
-| 动画 | 只写 `<video src="/name.mp4" controls class="w-full" />`，不写 Manim 代码 |
+| 动画 | Manim 兜底 MP4 可写 `<video src="/name.mp4" controls class="w-full" />`；Motion 段落仍用 `record.html` 独立录制，不嵌入 |
 | 资源 | MP4 放在 `03_slides/public/`；构建产物在 `dist/`（不提交） |
 | 构建 | `slidev-run.ps1 -Mode build` 退出码必须为 0 |
 
 检查：`--stage slides`；构建由 `tools/slidev-run.ps1` 执行。
 
-## 5. Manim 动画
+## 5. Manim 动画（兜底）
+
+> Motion Canvas 是动画主路径。下列 Manim 要求仅适用于 `segments.json` 中 `engine: "manim"` 的兜底锚点；Motion 段落由 `04_motion_src/segments.json` 声明 45–90 秒，并由 `--stage motion` 校验 scene/project/cue 与顺序。
 
 | 要求 | 规则 |
 | --- | --- |
@@ -79,7 +98,7 @@ Mapping: 8 anchor(s), 10 slide(s), buffer 2 (N >= M allowed)
 | 语法 | `from manim import *`；禁用 `manimlib` / ManimGL |
 | 禁用 API | `ThreeDScene`、`ThreeDCamera`、`Camera3D`、`ThreeDAxes`、`ParametricSurface`、`Surface(...)`、粒子系统 |
 | 场景 | 单文件、单场景；只做基础 2D 几何与文本 |
-| 时长 | 声明时长与真实 MP4 时长都必须 ≤20 秒 |
+| 时长 | 仅 legacy 兜底：声明时长与真实 MP4 时长都必须 ≤20 秒；Motion 主路径为 45–90 秒 |
 | 资源 | 不使用外部字体、网络图片、远程视频 |
 | 环境 | 只用课程自己的 `.venv`；不全局 `pip install` |
 | 渲染 | `render-manim.ps1` 默认 180 秒超时；超时杀进程树 |
@@ -93,6 +112,7 @@ Mapping: 8 anchor(s), 10 slide(s), buffer 2 (N >= M allowed)
 `course` / `technical` 的终检命令：
 
 ```powershell
+python D:\CourseStudio\tools\build-recording-package.py <slug>
 python D:\CourseStudio\tools\check-episode.py <slug> --mode technical --stage qa --strict
 python D:\CourseStudio\tools\check-links.py courses\<slug>
 ```
@@ -100,10 +120,13 @@ python D:\CourseStudio\tools\check-links.py courses\<slug>
 必须满足：
 
 - `Issues` 为空；中间阶段允许 `PARTIAL`，终检不放行缺失资源。
-- `[SLIDE]` 严格 1..N；研究文件非空；MP4 真实时长 ≤20 秒。
+- `[SLIDE]` 严格 1..N；研究文件非空；legacy Manim MP4 真实时长 ≤20 秒（Motion 主路径 45–90 秒）。
+- Motion Canvas：`--stage script` / `--stage motion` 硬校验节奏标注（每段恰好一个 `[SEGMENT]`、45–90 秒、HOLD/EMPHASIS/CUT、时间戳递增且不越界）；`--stage motion` 还校验 scene/project/cue 与顺序；`--stage recording` 校验 `05_recording/` 的 manifest、checklist、cues，不要求录像文件已存在。
+- 录制包由 `python tools/build-recording-package.py <slug>` 从讲稿 + `segments.json` 生成；生成器严格校验、幂等，缺源直接失败，不写空包。
+- Reveal 课件：`data-slide` 严格 1..N；本地 `src`/`href` 存在；strict 不跑 Slidev build。先运行 `reveal-run.ps1` 同步 `.vendor`。
 - 映射满足 `M <= N`，并输出 `Mapping: ... buffer ...` 报告；`M > N` 直接 FAIL。
-- `course` / `technical` 会**实际运行** `slidev-run.ps1 -Mode build`；非 0 即 `FAIL`。
-- 检查器自身的负向回归必须通过：`python tools/test_check_episode_negative.py`（7 项）。
+- Slidev 路径（technical / news / 旧课）会**实际运行** `slidev-run.ps1 -Mode build`；非 0 即 `FAIL`。Reveal 路径只做 `data-slide`/本地资源静态检查，strict 不跑 Slidev build。
+- 检查器与生成器的回归必须通过：`python tools/test_check_episode_negative.py`（32 项，含节奏标注、generator 幂等/失败不写包、motion / recording / Reveal data-slide/资源/strict 跳过 build）。
 - 浏览器逐页检查：16:9、导航、视频、控制台。
 - Manim 抽帧检查：开头、中间、结尾。
 - `handoff.md` 已更新；`Warnings` 逐条记录。
@@ -183,11 +206,14 @@ pnpm --dir D:\CourseStudio\tools\slidev-runtime store prune
 
 | 要求 | 强制工具 |
 | --- | --- |
-| 严格 slide 编号、防逃逸、页数映射、非空研究、ffprobe、Slidev build | `tools/check-episode.py` |
-| 检查器自身回归 | `tools/test_check_episode_negative.py` |
-| Manim API/时长/真实时长 | `check-episode.py` + `manim-isolation` Skill |
-| 渲染超时与失败日志 | `tools/render-manim.ps1` |
-| Manim 版本锁定、建集回滚 | `tools/new-episode.ps1` |
+| 严格 slide 编号、防逃逸、页数映射、非空研究、Motion 45–90s、录制包、Reveal data-slide/资源、Slidev build | `tools/check-episode.py` |
+| 检查器与生成器回归 | `tools/test_check_episode_negative.py` |
+| Motion 场景/工程、45–90s、record.html | `motion-isolation` + `tools/motion-run.ps1` |
+| 录制包 manifest/cues/checklist | `tools/build-recording-package.py` |
+| Reveal 同步与静态服务 | `tools/reveal-run.ps1` |
+| Legacy Manim API/时长/真实时长 | `check-episode.py` + `manim-isolation`（仅兜底） |
+| 渲染超时与失败日志 | `tools/render-manim.ps1`（legacy） |
+| 默认 Reveal/无 Manim、建集回滚 | `tools/new-episode.ps1` |
 | 课程/根仓库边界 | `.gitignore` + `tools/course.gitignore` |
 | 远程与克隆 | [repository-and-remote.md](repository-and-remote.md) |
 | 分块与停点 | [claude-orchestrator.md](../workflows/claude-orchestrator.md) |
@@ -198,5 +224,5 @@ pnpm --dir D:\CourseStudio\tools\slidev-runtime store prune
 - Slidev PDF 导出需要 Playwright；当前未安装。
 - `paper-search` 是 CLI + Skill，不是已注册 MCP。
 - 人工教学评审与学习者测试不在自动流程内。
-- 真实 Episode 尚未开跑；当前只有临时 fixture 验证。
-- GitHub Actions 已改为项目专用 CI（`ubuntu-24.04` + `actions/checkout@v7` + `actions/setup-python@v7`）：只跑 `py_compile`、链接检查与负向测试；不构建 Slidev、不渲染 Manim；Linux 上用 fake `ffprobe` 保证 7 项负向测试全部执行。
+- 第一集 `transformer-self-attention` 已完成内容与 QA，处于录制就绪；OBS 实拍、真实时长与后期拼接仍为 `NOT_RUN`。未阻塞项见 [known-limitations.md](known-limitations.md)。
+- GitHub Actions 已改为项目专用 CI（`ubuntu-24.04` + `actions/checkout@v7` + `actions/setup-python@v7`）：只跑 `py_compile`、链接检查与回归测试；不构建 Slidev、不渲染 Manim；Linux 上用 fake `ffprobe` 保证 32 项回归测试全部执行。

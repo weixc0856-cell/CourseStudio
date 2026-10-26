@@ -2,9 +2,9 @@
 
 适用于论文、教材、技术文档、系列资料转课程。产出是**可讲解、可复核的课程包**，不是自动生成的长视频。
 
-**产物根目录**：`D:\CourseStudio\courses\<slug>`。命名与两种布局见 [courses/README.md](../courses/README.md)；五阶段管线的兼容性与缺陷见 [pipeline-audit.md](pipeline-audit.md)。
+**产物根目录**：`D:\CourseStudio\courses\<slug>`。命名与两种布局见 [courses/README.md](../courses/README.md)；Episode 管线的兼容性与缺陷见 [pipeline-audit.md](pipeline-audit.md)。
 
-**新项目默认流程**：Episode + Slidev + Manim 隔离，见 [episode-pipeline.md](episode-pipeline.md)；分块状态机与停点见 [claude-orchestrator.md](claude-orchestrator.md)。本文件保留通用课程原则与 HTML 兼容路径。
+**新项目默认流程**：Episode + Motion Canvas + Reveal（technical 用 Slidev；Manim 仅兜底），见 [episode-pipeline.md](episode-pipeline.md)；分块状态机与停点见 [claude-orchestrator.md](claude-orchestrator.md)。**本文件其余部分主要描述旧版 HTML/Manim 兼容路径，新项目请以 [quickstart-episode.md](../guides/quickstart-episode.md) 与 Episode 管线为准。**
 
 本流程把两类工作分开：
 
@@ -15,7 +15,7 @@
 
 ---
 
-## 0. 两种仓库布局（先选一种）
+## 0. 旧版仓库布局（legacy；新项目用 Episode）
 
 | 布局 | 适用 | 做法 | 注意 |
 | --- | --- | --- | --- |
@@ -25,7 +25,7 @@
 当前约定是 **A**。`tools/new-course.ps1` 会：
 
 1. 创建独立 uv 项目与 `.venv`；
-2. 安装锁定版本的 ManimCE；
+2. 安装锁定版本的 ManimCE（**旧版兼容布局**；新 Episode 用 `new-episode.ps1`，默认不装 Manim）；
 3. 复制 [tools/course.gitignore](../tools/course.gitignore) 到课程根目录；
 4. **不会**自动 `git init`、提交或推送。
 
@@ -59,7 +59,7 @@ uv run manim checkhealth
 3. [guides/audience-vs-internal.md](../guides/audience-vs-internal.md)。
 4. [guides/delivery-quality.md](../guides/delivery-quality.md)。
 5. Skill 的 `references/source-and-claims.md`、`references/teaching-design.md`。
-6. 只有确实使用 Manim 时，读 Skill 的 `references/manim-workflow.md`。
+6. 默认按 Motion Canvas 主路径工作；只有 Manim 兜底时读 Skill 的 `references/manim-workflow.md`。
 7. 只有需要领域检查时，读 Skill 的 `references/domain-checks.md`。
 
 如果已有完整研究包：**先读 `research/00`、`research/04`、`research/05`**；`02` 台账只按需检索，不线性通读。
@@ -201,11 +201,16 @@ HTML：
 - 章节、静态图、导航、总结、自测。
 - 不依赖未确认的 CDN/外部运行时。
 
-Manim：
+Motion Canvas（默认）：
 
-- 只做适合时间演化的机制、数据流、几何/矩阵变换。
-- 少量高质量场景，不以数量为目标。
-- 先低质量预览；审查后再正式渲染。
+- 一个 `[ANIMATION]` 对应 45–90 秒叙事段落；用 `record.html?segment=<name>` 独立录制。
+- 几何构建、逐步揭示、`waitFor` 停顿；不用装饰性粒子/3D。
+- 不默认渲染 MP4；`?present` 仅预览。
+
+Manim（兜底）：
+
+- 仅在 `segments.json` 的 `engine: "manim"` 时使用；单场景 ≤20 秒。
+- 少量高质量场景，不以数量为目标；先低质量预览再正式渲染。
 - 记录场景源码、命令、版本、输出路径。
 
 旁白：
@@ -293,7 +298,7 @@ Manim：
 
 ## 5. 最低产物
 
-> Episode + Slidev 默认布局的最低产物见 [episode-pipeline.md](episode-pipeline.md) 第 1 节；下面是通用/HTML 兼容布局。
+> Episode + Motion/Reveal 默认布局的最低产物见 [episode-pipeline.md](episode-pipeline.md) 第 1 节；technical/news 可继续 Slidev；下面是通用/HTML 兼容布局。
 
 ```text
 course-project/

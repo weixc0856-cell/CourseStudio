@@ -1,9 +1,9 @@
-# 五阶段管线审计：当前状态、历史修复与待办
+# Episode 管线审计：当前状态、历史修复与待办
 
 - **更新日期**：2026-10-26
 - **适用范围**：`D:\CourseStudio\courses\` 下的课程、新闻、技术解读与播客
 - **远程**：`git@github.com:weixc0856-cell/CourseStudio.git`（`main`）
-- **结论摘要**：工具链与严格 QA 已落地；**真实 Episode 尚未开跑**（`NOT_RUN`）。
+- **结论摘要**：Motion Canvas + Reveal 框架升级完成，严格 QA 与 32 项回归已落地；第一集 `transformer-self-attention` 已到**录制就绪**，人工 OBS/后期仍为 `NOT_RUN`。
 
 > 本文件分为三部分：当前状态、历史审计与已修复记录、已知限制与待办。历史章节中的 `BLOCKED` / `PARTIAL` 是当时的审计结论，不代表当前状态。
 
@@ -16,11 +16,14 @@
 ```text
 Episode 目录契约
   → paper-search + research-to-course-synthesis（研究输入）
-  → course-studio（讲稿 + 强制视觉锚点）
-  → Slidev（骨架 → 填充）
-  → manim-isolation（单锚点 2D 动画）
-  → check-episode.py --stage qa --strict（真实 Slidev build + ffprobe）
-  → OBS 人工录制
+  → course-studio（讲稿 + [SLIDE]/[ANIMATION] + [SEGMENT] 节奏标注）
+  → motion-isolation（45–90s Motion Canvas 叙事段落）
+  → build-recording-package.py（05_recording 录制就绪包）
+  → Reveal（course 默认）/ Slidev（technical/news/旧课）
+  → check-episode.py --stage qa --strict
+  → OBS 人工录制（NOT_RUN）
+
+Manim：仅 segments.json engine="manim" 的兜底路径，不是默认。
 ```
 
 默认布局与约束见 [episode-pipeline.md](episode-pipeline.md)；分块状态机见 [claude-orchestrator.md](claude-orchestrator.md)；硬性要求见 [requirements.md](../guides/requirements.md)。
@@ -31,14 +34,17 @@ Episode 目录契约
 | --- | --- | --- |
 | `paper-search` | `PASS_VERIFIED` | CLI + Skill 可用；25 个来源；**不是 MCP** |
 | `research-to-course-synthesis` | `PASS_VERIFIED` | 曾用 11 篇全文跑通 `00`–`06`、46 条主张、91/91 定位 |
-| `course-studio` | `PASS_STATIC` | 已注册，5 个 reference 完整；本仓库未做完整讲稿端到端 |
-| Slidev 运行时 | `PASS_VERIFIED` | `@slidev/cli 53.0.0`；`markdown-it` 14.1.0；build/dev/public 均通过 |
-| `manim-isolation` | `PASS_VERIFIED` | 独立 Skill + 全局 junction；不是旧 ZIP |
-| Manim 运行时 | `PASS_VERIFIED`（历史） | 0.22.0；pilot `.venv` 已清理，按需 `uv sync` 重建 |
-| `check-episode.py` | `PASS_VERIFIED` | 严格编号、研究非空、ffprobe、真实 build、映射、7 项负向测试 |
-| `render-manim.ps1` | `PASS_VERIFIED` | 180s 超时；失败保留日志；成功清理 |
-| `new-episode.ps1` | `PASS_VERIFIED` | Python 3.12；`manim==0.22.0`；失败回滚 |
-| GitHub Actions | `PASS_VERIFIED` | 项目专用 CI：`ubuntu-24.04`；`checkout@v7` / `setup-python@v7`（Node 24）；py_compile + link check + negative tests |
+| `course-studio` | `PASS_STATIC` | 已注册，5 个 reference 完整；新 prompt 要求节奏标注与 Motion 主路径 |
+| Motion Canvas | `PASS_VERIFIED` | 3.17.2 + Vite 5.4.21；45s probe；`record.html` 真浏览器可播 |
+| Reveal 运行时 | `PASS_VERIFIED` | 6.0.2；`reveal-run` 同步 `.vendor` + Python 静态服务；data-slide/资源检查 |
+| Slidev 运行时 | `PASS_VERIFIED` | `@slidev/cli 53.0.0`；technical/news/旧课 |
+| `motion-isolation` | `PASS_VERIFIED` | 3B1B 风格、45–90s、`[ANIMATION]`/`[SEGMENT]`/`record.html` |
+| `manim-isolation` | `PASS_VERIFIED`（legacy） | 仅 `engine=manim` 兜底 |
+| Manim 运行时 | `PASS_VERIFIED`（legacy） | 0.22.0；仅兜底；≤20s |
+| `check-episode.py` | `PASS_VERIFIED` | motion/recording/slides/qa；Reveal 静态、Slidev build、32 项回归 |
+| `render-manim.ps1` | `PASS_VERIFIED`（legacy） | 180s 超时；失败保留日志；成功清理 |
+| `new-episode.ps1` | `PASS_VERIFIED` | course 默认 Reveal；technical/news Slidev；默认不装 Manim |
+| GitHub Actions | `PASS_VERIFIED` | `ubuntu-24.04`；py_compile + link check + 32 项回归 |
 | OBS | `NOT_RUN` | 未在常规路径检测到；录制为人工阶段 |
 | Playwright PDF 导出 | `NOT_RUN` | 未安装；不影响 dev/build |
 
@@ -46,13 +52,15 @@ Episode 目录契约
 
 | 检查 | 结果 | 证据 |
 | --- | --- | --- |
-| 负向测试 | 7/7 `OK` | `python tools/test_check_episode_negative.py` |
+| 回归测试 | 32/32 `OK` | `python tools/test_check_episode_negative.py` |
 | 链接检查 | `PASS_VERIFIED` | `tools/check-links.py` |
 | 严格研究拦截 | PASS | 空/缺文件在 `--strict` 或 `qa` 下返回非零 |
 | Slide 映射 | PASS | 输出 `Mapping: M anchor(s), N slide(s), buffer ...`；`M > N` FAIL |
-| ffprobe 时长 | PASS | 2.4s 通过；27s FAIL |
-| Slidev build | PASS | `dist/index.html` 生成；非 0 即 QA FAIL |
-| Manim 渲染 | PASS | 12,496 字节 MP4；180s 超时杀进程树 |
+| Motion 时长 probe | PASS | 45s 示例 = 2700 帧 / 60fps |
+| Reveal 静态检查 | PASS | data-slide 1..N、本地资源、strict 跳过 Slidev build |
+| 录制包 | PASS | 生成器幂等；非法源失败不写包 |
+| Slidev build | PASS（technical/旧课） | `dist/index.html` 生成；非 0 即 QA FAIL |
+| legacy Manim ffprobe | PASS（兜底） | 2.4s 通过；27s FAIL |
 | 建集回滚 | PASS | 失败后无残留课程目录 |
 | CI | `PASS_VERIFIED` | 最近一次 `main` 推送的 `CourseStudio CI` 通过 |
 
@@ -60,18 +68,22 @@ Episode 目录契约
 
 | 目录 | 状态 |
 | --- | --- |
-| `transformer-course-pilot/` | 历史 HTML 试点；源码、QA 报告、渲染保留；`.venv` 与浏览器 profile 已清理，可按需 `uv sync` 重建 |
-| `attention-research-2026-10/` | 研究输入测试；`00`–`06`、检索 JSON、台账保留；PDF/全文已清理 |
+| `transformer-self-attention/` | 第一集 course；Motion 68s + Reveal 12 页 + `05_recording`；内容/QA `PASS_VERIFIED`，待人工 OBS |
+| `attention-research-2026-10/` | 研究输入样本；`00`–`06`、检索 JSON、台账保留；不是默认课程模板 |
+| `_retired/transformer-course-pilot/` | 历史 HTML + Manim 试点；已退役归档，不参与当前流程 |
+| `_retired/course-attention/` | 历史 Slidev + Manim 课程；已退役归档，`.venv` 已删除 |
 
 ### 1.5 当前结论
 
-- 工具链、严格 QA、负向回归和 CI 已就绪。
-- 尚未跑第一集真实 Episode；`course-studio` 的完整讲稿生产也未在本仓库端到端执行。
-- 可以开始真实项目，但必须按分块状态机执行并在每个停点人工确认。
+- 工具链、严格 QA、32 项回归和 CI 已就绪；Motion Canvas + Reveal 主路径已完成框架升级。
+- 第一集 `transformer-self-attention` 已端到端跑到录制就绪：research → script → motion → recording package → Reveal → qa。
+- 下一步仅人工 OBS 实拍、真实时长/音画检查与后期拼接；不进入新功能开发。
 
 ---
 
 ## 2. 历史审计与已修复记录
+
+> 以下 v1.x 记录的是 legacy Manim/Slidev 时代；现行主路径见第 1 节。历史中的“≤20 秒”仅适用于 legacy Manim 兜底，不是 Motion 约束。
 
 ### 2.1 初始审计发现（历史）
 
@@ -83,11 +95,11 @@ Episode 目录契约
 | D-04 | 三套目录契约冲突 | `PARTIAL` | Episode 布局定为默认 |
 | D-05 | 研究输出命名不一致 | `PARTIAL` | 别名表写入 `courses/README.md` 与流程 |
 | D-06 | 讲稿无强制视觉锚点 | `PARTIAL` | 强制 `[SLIDE]` / `[ANIMATION]` + 检查器 |
-| D-07 | Slidev 与 `course-studio` 默认 HTML 冲突 | `PARTIAL` | 流程固定 Slidev；prompt 明确覆盖 |
+| D-07 | Slidev 与 `course-studio` 默认 HTML 冲突 | `PARTIAL` | 历史：当时固定 Slidev；现行 course 默认 Reveal、technical/news 用 Slidev；prompt 明确覆盖 |
 | D-08 | 安装版本与 ZIP 版本漂移 | `PARTIAL` | 保留已安装版本；旧 ZIP 不再安装 |
 | D-09 | 阶段之间无交接契约 | `PARTIAL` | `handoff.md` + 分块状态机 |
-| D-10 | 无锚点/资产校验 | `PARTIAL` | `check-episode.py` + 负向测试 |
-| D-11 | OBS 无检查清单 | `PARTIAL` | 已加 `qa/recording-checklist.md`；OBS 仍未安装 |
+| D-10 | 无锚点/资产校验 | `PARTIAL` | `check-episode.py` + 回归测试 |
+| D-11 | OBS 无检查清单 | `PARTIAL` | 已加 `05_recording/checklist.md`；`qa/recording-checklist.md` 仅保留为指针；OBS 仍未安装 |
 | D-12 | Skill 目录是复制而非链接 | `PARTIAL` | `manim-isolation`/`paper-search` 用 junction；其余仍为副本 |
 | D-13 | `.gitignore` 不覆盖 Episode 布局 | `FIXED` | 已覆盖 PDF/MP4/media/downloads 等 |
 
@@ -97,7 +109,7 @@ Episode 目录契约
 
 - 锚点防逃逸：代码块/引用块/注释中的锚点判 FAIL。
 - Manim API 锁：禁用 `manimlib`、3D 摄像机、粒子等。
-- 声明时长 ≤20 秒；渲染 180 秒超时。
+- 历史：Manim 兜底声明时长 ≤20 秒；渲染 180 秒超时（现行 Motion 主路径为 45–90 秒）。
 - Python 固定 3.12；支持 course/technical/news/podcast。
 - OBS 改为高容错：允许口误，停顿 2 秒重念，后期剪辑。
 
@@ -112,7 +124,7 @@ Episode 目录契约
 
 - Slide 编号严格 1..N；重复、跳号、乱序 FAIL。
 - 研究文件非空；news/podcast 要求 source + claim + `FACT`/`CLAIM`。
-- ffprobe 读取真实 MP4 时长，超 20 秒 FAIL。
+- 历史：legacy Manim ffprobe 读取真实 MP4 时长，超 20 秒 FAIL（现行 Motion 主路径 45–90 秒）。
 - `--stage qa --strict` 实际运行 Slidev build，非 0 FAIL。
 - 渲染失败保留日志；Manim 版本锁定 0.22.0；建集失败回滚。
 
@@ -121,13 +133,13 @@ Episode 目录契约
 - `--strict` 或 `qa` 下研究缺失/空文件直接进 `issues`，不再降级 warning。
 - 资产缺失、ffprobe 不可用、时长超限在严格模式下硬失败。
 - 输出 `Mapping: M anchor(s), N slide(s), buffer ...`；`M > N` FAIL。
-- 新增 `test_check_episode_negative.py`，7 项负向测试。
+- 新增 `test_check_episode_negative.py`，当时 7 项负向测试（现已扩展到 32 项回归）。
 
 **v1.5 — CI 与文档同步**
 
 - 替换通用 Python workflow：不再 flake8 扫描 vendored 代码，不再跑空 pytest。
 - Runner 固定 `ubuntu-24.04`；`actions/checkout@v7` / `actions/setup-python@v7`（Node 24），消除迁移与 Node 20 弃用告警。
-- CI 增加负向测试步骤。
+- CI 增加回归测试步骤。
 - 修复 vendored `citeseerx.py` 缺失的 `import os`。
 - 清理文档中已删除课程与历史故障的过期描述。
 
@@ -155,17 +167,17 @@ Episode 目录契约
 | OBS 未安装/未检测到 | 录制只能人工；无法自动化 | `NOT_RUN` |
 | Playwright 未安装 | Slidev PDF/PPTX 导出不可用 | `NOT_RUN` |
 | `paper-search` 不是 MCP | 只能通过 CLI/Skill 调用 | 已接受 |
-| 真实 Episode 未跑 | 端到端内容质量未验证 | `NOT_RUN` |
+| 第一集已到录制就绪，实拍未跑 | 端到端内容/时序已验证；OBS 画面与音画同步未验证 | `PARTIAL` |
 | `course-studio` 未完整端到端 | 讲稿长度/节奏仍需实测 | `PARTIAL` |
-| CI 不构建 Slidev / 不渲染 Manim | Runner 固定 `ubuntu-24.04`；CI 只保证语法、链接、负向测试 | 已知 |
-| CI 的 ffmpeg/PowerShell 依赖 | Linux 使用 fake `ffprobe`，7 项负向测试全部执行；Windows 无 ffmpeg 时该用例跳过 | 已容错 |
+| CI 不构建 Slidev / 不渲染 Manim | Runner 固定 `ubuntu-24.04`；CI 只保证语法、链接、回归测试 | 已知 |
+| CI 的 ffmpeg/PowerShell 依赖 | Linux 使用 fake `ffprobe`，32 项回归测试全部执行；Windows 无 ffmpeg 时该用例跳过 | 已容错 |
 | Skill 副本非全部链接 | 版本可能漂移 | `PARTIAL` |
 | 人工教学评审缺失 | 教学效果未验证 | `NOT_RUN` |
 
 ### 3.2 待办
 
 1. 跑第一集真实 Episode，记录实际耗时、上下文长度与失败点。
-2. 确认/安装 OBS，按 `qa/recording-checklist.md` 完成一次录制。
+2. 确认/安装 OBS，按 `05_recording/checklist.md` 完成一次录制。
 3. 如需 PDF 导出，安装 Playwright 并验证 `slidev export`。
 4. 视需要把 `paper-search` 注册为 stdio MCP。
 5. 评估把 `course-studio`、`research-to-course-synthesis`、`slidev` 统一为版本化 junction。

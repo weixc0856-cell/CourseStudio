@@ -1,370 +1,308 @@
 # Episode 使用教程（课程 / 新闻 / 播客）
 
-本教程是 [episode-pipeline.md](../workflows/episode-pipeline.md) 的操作版；硬性验收、清理与 Git 规则见 [requirements.md](requirements.md)。所有产物放在 `D:\CourseStudio\courses\<slug>\`；所有环境在项目内构建，不装全局 Python/npm 包。
+本教程是 [episode-pipeline.md](../workflows/episode-pipeline.md) 的操作版；最短路径见 [quickstart-episode.md](quickstart-episode.md)，分块状态机见 [claude-orchestrator.md](../workflows/claude-orchestrator.md)，硬性验收与 Git 规则见 [requirements.md](requirements.md)。所有产物放在 `D:\CourseStudio\courses\<slug>\`；所有环境在项目内构建，不装全局 Python/npm 包。
 
 ## 0. 先决条件
 
-| 组件 | 状态 | 位置 |
-| --- | --- | --- |
-| Slidev 运行时 | 已安装（项目内） | `tools/slidev-runtime/` |
-| Manim | 每集安装到自己的 `.venv` | `new-episode.ps1` 自动执行 |
-| `manim-isolation` Skill | 已注册 | `tools/skills/manim-isolation` → 全局 junction |
-| `paper-search` | 已安装（CLI + Skill） | `tools/paper-search-mcp/bin/paper-search` |
-| OBS | 需人工确认安装 | 非 Skill；未在常规路径检测到 |
+| 组件 | 位置 / 说明 |
+| --- | --- |
+| Motion Canvas 模板 | `tools/motion-runtime/`；第一次 `motion-run.ps1` 时在课程 `04_motion_src/` 内安装 |
+| Reveal 运行时 | `tools/reveal-runtime/`（`reveal.js@6.0.2`）；`pnpm install` 一次 |
+| Slidev 运行时 | `tools/slidev-runtime/`（technical / news / 旧课） |
+| Python | 系统 Python 3.12；`check-episode.py` / `build-recording-package.py` / `python -m http.server` |
+| OBS | 人工确认安装；AI 不调用，相关项 `NOT_RUN` |
 
-先确认：
-
-```powershell
-Test-Path D:\CourseStudio\tools\slidev-runtime\node_modules\@slidev\cli
-uv --version
-```
-
-> 不要用 `slidev --version` 做检查（可能启动 CLI）。Slidev 是否可用，以 `node_modules/@slidev/cli` 存在 + 一次 `slidev-run.ps1 -Mode build` 为准。Manim 版本用课程 `.venv` 的 `uv run manim --version`。
+> 不运行全局 `npm install -g` / `pip install`，不改系统 PATH。
 
 ## 0.1 一条主指令（推荐）
 
-不要每次复制五段长 Prompt。把 [workflows/claude-orchestrator.md](../workflows/claude-orchestrator.md) 作为主规则，每次只发一句：
+不要每次复制长 Prompt。把 [claude-orchestrator.md](../workflows/claude-orchestrator.md) 作为主规则，每次只发一句：
 
-> 请严格按照 `workflows/claude-orchestrator.md` 的规则，推进 `courses/<slug>` 的管线。当前模式：`course|technical|news|podcast`。先读 `handoff.md` 判断状态，只执行下一个子步骤；写完后运行对应的 `--stage` 检查，更新 `handoff.md` 并停下等我确认。
+> 请严格按照 `workflows/claude-orchestrator.md` 的规则，推进 `courses/<slug>` 的管线。当前模式：`course|technical|news|podcast`。先读 `handoff.md` 判断状态，只执行下一个子步骤；写完后运行对应 `--stage` 检查，更新 `handoff.md` 并停下等我确认。
 
-它每次只做一个子步骤：写文件 → 跑 `check-episode.py --stage ...` → 修到无 `Issues` → 更新 `handoff.md` → 停止。**不要一次要求它生成 `00`–`06`、整份讲稿、整份页面和所有动画。**
+它每次只做一个子步骤：写文件 → 跑 `check-episode.py --stage ...` → 修到无 `Issues` → 更新 `handoff.md` → 停止。
 
-## 1. 选模式
+## 1. 默认技术栈与模式
 
-| 模式 | 用途 | 必需 | 可跳过 |
+| 模式 | 动画 | 课件 | 研究 |
 | --- | --- | --- | --- |
-| `course` | 系统课程 | `01_research` 00–06、`02_scripts`、`03_slides` | `04_manim_src` |
-| `technical` | 论文/技术精读 | 同上 + 公式检查 | `04_manim_src` |
-| `news` | 新闻/行业视频 | `01_research` 来源/台账、`02_scripts` | Manim |
-| `podcast` | 纯音频播客 | `01_research` 来源/台账、`02_scripts` | Slidev、Manim |
+| `course` | Motion Canvas 45–90s | **Reveal 默认**（`03_slides/index.html`） | `00`–`06` |
+| `technical` | Motion Canvas；Manim 兜底 | **Slidev 默认**（`03_slides/slides.md`） | `00`–`06` + 公式 |
+| `news` | 可选 Motion | Slidev 3–8 页，可选 | `source-register` + `claims-ledger` |
+| `podcast` | 无 | 无 | `source-register` + `claims-ledger` + 提纲 |
 
-模式决定 `check-episode.py --mode` 的检查项；新闻/播客不要求课件，但不能跳过来源与主张台账。
+新 `course` 的顺序是：
+
+```text
+research → script（含节奏标注）→ motion → recording（录制就绪包）→ Reveal slides → qa → 人工 OBS 录制
+```
+
+`recording` 阶段是生成 `05_recording/`，不是 OBS 实拍；实拍在 QA 之后由人工完成。
 
 ## 2. 建集
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\new-episode.ps1 -Name course-attention -Mode course
+powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\new-episode.ps1 `
+  -Name course-example -Mode course
 ```
 
-生成：
+生成（course）：
 
 ```text
-courses/course-attention/
-├── 00_raw_materials/
+courses/course-example/
 ├── 01_research/
 ├── 02_scripts/lecture_script.md
-├── 03_slides/slides.md
-├── 03_slides/public/
-├── 04_manim_src/scenes/
-├── qa/recording-checklist.md
+├── 03_slides/
+│   ├── index.html            # Reveal（course 默认）
+│   └── assets/deck.css
+├── 04_motion_src/
+│   ├── record.html
+│   ├── segments.json
+│   └── src/{scenes,projects,theme.ts}
+├── 05_recording/
+│   ├── manifest.json
+│   ├── checklist.md
+│   └── cues/example.md
+├── qa/
 ├── handoff.md
-├── README.md
 └── .gitignore
 ```
 
-脚本会把 Python 固定到 3.12，并在课程 `.venv` 安装 Manim；不会 `git init`。
+- 默认**不安装 Manim**；需要兜底时加 `-WithManim`。
+- `technical` / `news` 默认保留 Slidev，移除 Reveal 模板；`podcast` 不要求课件。
+- 不自动 `git init`、不提交、不渲染。
 
-**G0 检查**：
+**G0**：目录、讲稿、`segments.json`、`05_recording/`、`handoff.md` 存在；course 有 `index.html`，technical/news 有 `slides.md`。
 
-```powershell
-cd D:\CourseStudio\courses\course-attention
-uv run manim --version
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\slidev-run.ps1 -Episode course-attention -Mode build
-```
+## 3. 研究输入（R1–R4）
 
-## 3. 阶段一：研究输入（分四轮）
+不要一次生成 `00`–`06`。按轮推进，每轮只写该轮产物：
 
-不要一次生成 `00`–`06`。按 R1→R4 分轮，每轮只写该轮产物。
-
-### R1 来源登记
-
-> 只做 R1：在 `01_research/` 生成 `01-source-inventory.md` 与 `search-results/`。用 `paper-search` 检索原始论文与代表性后续研究，记录检索式、来源、标识符、访问状态。不要写台账、讲稿或页面。
-
-```bash
-P=/d/CourseStudio/tools/paper-search-mcp/bin/paper-search
-$P search "<query>" -s fast -n 5 --source-timeout 30 > 01_research/search-results/q01.json
-$P download arxiv 1706.03762 -o 01_research/downloads
-```
-
-### R2 主张台账
-
-> 只做 R2：基于 R1 的来源，生成 `01_research/02-claim-evidence-ledger.csv`。每条关键主张有 `CLM-XXX`、页码/公式定位；区分 `FACT` / `CLAIM` / `INFERENCE` / `ASSUMPTION`；冲突保留双方证据。不要写讲稿。
-
-### R3 知识结构
-
-> 只做 R3：生成 `01_research/03-knowledge-structure.md`。记录公式、符号、量纲、适用条件、冲突与未决项。符号必须与 R2 台账一致；不要写讲稿。
-
-### R4 冻结大纲
-
-> 只做 R4：基于 R1–R3 生成 `01_research/00-task-brief.md`、`04-course-input-brief.md`、`05-quality-report.md`、`06-course-outline.md`。`06` 必须给出模块划分与递进逻辑；`05` 写明 `NOT_RUN` / `PARTIAL`。不要写讲稿或页面。
-
-**G1 检查**：
+1. **R1 来源登记**：`01-source-inventory.md` + `search-results/`；
+2. **R2 主张台账**：`02-claim-evidence-ledger.csv`；
+3. **R3 知识结构**：`03-knowledge-structure.md`；
+4. **R4 冻结大纲**：`00`、`04`、`05`、`06`。
 
 ```powershell
-python D:\CourseStudio\tools\check-episode.py course-attention --mode technical --stage research
+python D:\CourseStudio\tools\check-episode.py course-example --mode course --stage research
 ```
 
-- `04-course-input-brief.md` 能直接支持讲稿；
-- `06-course-outline.md` 有模块顺序；
-- `05-quality-report.md` 写明未决项；
-- `00`–`06` 必须非空；空文件会被 `--stage research` 判 FAIL。
+`00`–`06` 必须非空；每条关键主张有 `CLM-XXX` 与定位。完成后更新 `handoff.md`，建议 `/clear`。
 
-完成后更新 `handoff.md`（阶段 `research`，子步骤 `R4`，模块进度 `0/N`），建议 `/clear`（C1）。
+## 4. 讲稿与节奏标注
 
-## 4. 阶段二：讲稿（按模块分轮）
+按大纲模块，每次写 1–2 个模块，追加到 `02_scripts/lecture_script.md`。不要生成 HTML 课件，不要默认 Manim。
 
-新会话调用 `course-studio`。必须覆盖它默认的 HTML 倾向。**每次只写 1–2 个模块，追加到同一文件，不要重写全文，也不要提前写后续模块。**
-
-### S1 模块 1–2
-
-> 本课程采用 Episode + Slidev 布局。只写 `02_scripts/lecture_script.md`；不要生成 HTML 课件。本次仅撰写 `06-course-outline.md` 的第 1–2 模块，追加写入，不重写已有内容。必须使用纯文本独立成行的 `[SLIDE: NN]` 和 `[ANIMATION: snake_case_name]`。禁止包在代码块（三反引号）、引用块（`>`）或 HTML 注释（`<!-- -->`）中。引用 `01_research/04-course-input-brief.md` 与 `03-knowledge-structure.md`。
-
-### S2 模块 3–4
-
-> 继续写第 3–4 模块，追加到 `02_scripts/lecture_script.md`；不要重写第 1–2 模块，不要提前写第 5 模块之后。锚点规则同上。
-
-### S3 模块 5–6
-
-> 继续写第 5–6 模块，追加；不要重写已有内容。锚点规则同上。
-
-锚点示例：
+### 4.1 锚点
 
 ```text
 [SLIDE: 05]
-
-（口播）
-
-[ANIMATION: navier_stokes]
-
-（口播：说明动画中发生了什么）
+[ANIMATION: attention_scores]
 ```
 
-**每批后检查**：
+- 锚点必须纯文本独立成行；禁止包在代码块、引用块或 HTML 注释中。
+- `[SLIDE: NN]` 严格 1..N，与课件页序对应。
+- `[ANIMATION: name]` 对应一个 Motion 段落。
+
+### 4.2 节奏标注
+
+每个 motion 段落紧跟：
+
+```text
+[ANIMATION: example]
+[SEGMENT: example | 45s | order=1]
+[VISUAL 00:00] 建立坐标系
+[HOLD 00:05] 停 2 秒
+[EMPHASIS 00:15] 高亮关键量
+[CUT 00:23] 切换视图
+[VISUAL 00:33] 收束
+（口播：先把 a 接上 b；从原点指向终点的箭头就是 a + b。）
+```
+
+- 每个 `[ANIMATION]` 恰好一个 `[SEGMENT]`；
+- 45–90 秒；
+- 至少各一条 `HOLD` / `EMPHASIS` / `CUT`；
+- 时间戳严格递增，最后一条不超过声明时长；
+- name / 时长 / order 与 `04_motion_src/segments.json` 一致。
 
 ```powershell
-python D:\CourseStudio\tools\check-episode.py course-attention --mode technical --stage script
+python D:\CourseStudio\tools\check-episode.py course-example --mode course --stage script
 ```
 
-- 中间阶段允许 `PARTIAL`（尚无 MP4），但 `Issues` 必须为空；
-- `[SLIDE]` 必须严格 `01, 02, 03...`；重复、跳号、乱序会直接 FAIL；
-- 重点看锚点是否纯净、页数是否匹配。
+缺标注、时长越界、时间戳乱序、与 `segments.json` 不一致都会 FAIL。
 
-全部模块完成后更新 `handoff.md`（阶段 `script`，模块进度 `N/N`），建议 `/clear`（C2）。
+## 5. Motion Canvas 段落
 
-## 5. 阶段三：Slidev 排版（先骨架，后填充）
+技能契约：[tools/skills/motion-isolation/SKILL.md](../tools/skills/motion-isolation/SKILL.md)。
 
-新会话调用 `slidev`。只做排版，不写动画。**先 P1 骨架，再 P2 逐模块填充。**
+### 5.1 冻结 `segments.json`
 
-### P1 骨架
+```json
+{
+  "canvas": {"width": 1920, "height": 1080, "fps": 60},
+  "segments": [
+    {
+      "name": "example",
+      "engine": "motion",
+      "duration_seconds": 45,
+      "order": 1,
+      "scene": "example",
+      "record_status": "NOT_RUN"
+    }
+  ]
+}
+```
 
-> 只修改 `03_slides/slides.md`。读取 `02_scripts/lecture_script.md` 的所有 `[SLIDE: NN]`，先生成仅包含标题、分页和必要 frontmatter 的骨架；不要填充正文，不要写动画代码，不要改讲稿。
+`segments.json` 是引擎、时长、顺序与录制顺序的唯一事实来源。Manim 仅 `engine: "manim"` 时使用。
 
-检查页数：
+### 5.2 写一个段落
+
+```text
+04_motion_src/
+├── src/scenes/example.tsx
+└── src/projects/example.ts
+```
+
+3B1B 风格：
+
+- 先建立几何对象 → 用变换推导 → 每个关键步骤 `waitFor` 停顿；
+- 不用装饰性粒子 / 3D / 复杂运镜；
+- 显式 `fontFamily={theme.fontFamily}`；
+- 一个段落 45–90 秒；代码拆成 `beat1()` / `beat2()`。
+
+启动录制页：
 
 ```powershell
-python D:\CourseStudio\tools\check-episode.py course-attention --mode technical --stage slides
+powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\motion-run.ps1 `
+  -Episode course-example -Segment example
 ```
 
-### P2 填充
+打开打印的 `http://localhost:9100/record.html?segment=example`。第一次会安装课程内依赖。
 
-> 按模块逐步填充 `03_slides/slides.md`；本次只填第 1–2 模块，保持已有骨架页序不变。动画只写 `<video src="/name.mp4" controls class="w-full" />` 占位；不要生成 Manim 代码，不要改讲稿。每页一个主要教学目标，16:9，代码/公式可读。
-
-每 1–2 个模块后检查一次；全部填充后构建：
+- **不要用 `?present` 录制**：全屏仍有演示控件。
+- 页面使用 `@motion-canvas/player`，`auto="true"`，隐藏播放器 UI。
+- 全屏后等 2 秒，再开始 OBS。
+- QA 可用 `record.html?segment=example&probe=1` 读取真实时长；录制不要带 `probe`/`loop`。
 
 ```powershell
-# 开发服务器
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\slidev-run.ps1 -Episode course-attention -Mode dev -Port 3030
-
-# 构建
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\slidev-run.ps1 -Episode course-attention -Mode build
+python D:\CourseStudio\tools\check-episode.py course-example --mode course --stage motion
 ```
 
-**G3 检查**：`03_slides/dist/index.html` 存在；浏览器逐页检查无溢出；`public/` 资源可访问；页数与 `[SLIDE]` 匹配。
+每个段落 scene / project / cue 齐全，45–90 秒，order 连续。完成后更新 `handoff.md`，建议 `/clear`。
 
-完成后更新 `handoff.md`（阶段 `slides`），建议 `/clear`（C4）。
-
-## 6. 阶段四：Manim 隔离舱（少而精）
-
-新会话调用 `manim-isolation`。**不要给每个公式都做动画**；只挑 1–2 个核心锚点。一次只做一个，完成后检查，再做下一个。
-
-**建议 prompt**：
-
-> 为 `[ANIMATION: navier_stokes]` 生成 `04_manim_src/scenes/navier_stokes.py`。这是本课程的第 1/2 个动画。只读 `01_research/03-knowledge-structure.md` 的符号；只写这一个场景。
->
-> 隔离约束：
-> 1. Manim Community v0.22.0（`from manim import *`），禁用 `manimlib`。
-> 2. 禁用 `ThreeDScene`、`ThreeDCamera`、`Camera3D`、`ThreeDAxes`、`ParametricSurface` 与粒子系统；只做基础 2D 几何与文本。
-> 3. 单场景不超过 20 秒。
-> 4. 不引入外部字体、图片、网络资源。
->
-> 用项目本地 `.venv` 渲染；输出到 `03_slides/public/navier_stokes.mp4`。不要改讲稿或 Slidev。
-
-渲染：
+## 6. 录制就绪包
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\render-manim.ps1 `
-  -Episode course-attention -Name navier_stokes -SceneClass NavierStokes -Quality l -TimeoutSeconds 180
+python D:\CourseStudio\tools\build-recording-package.py course-example
 ```
 
-- 迭代用 `-Quality l`；定稿用 `-Quality h`。
-- 超过 180 秒会杀掉整棵进程树；不要靠延长超时硬跑。
-- 成功后输出 `OUTPUT=...`、`BYTES=...`、`STATUS=PASS_VERIFIED`。
+生成/刷新：
 
-**每个锚点完成后检查**：
+- `05_recording/manifest.json`：顺序、`record.html?segment=<name>`、声明时长、cue、`record_status`；
+- `05_recording/cues/<name>.md`：画面指令与口播行；
+- `05_recording/checklist.md`：段落表与 URL。
+
+生成器严格校验、幂等；缺源/缺标注直接失败，不写空包；`record_status` 保留。
 
 ```powershell
-python D:\CourseStudio\tools\check-episode.py course-attention --mode technical --stage manim
+python D:\CourseStudio\tools\check-episode.py course-example --mode course --stage recording
 ```
 
-检查：场景文件存在、MP4 非空、无禁用 API、声明时长 ≤20 秒。再抽帧看开头/中间/结尾。通过后再做下一个锚点；上下文明显变长时 `/clear`（C5）。
+`recordings/` 与实拍文件不强制存在；OBS 仍未开录，标 `NOT_RUN`。
 
-## 7. 阶段五：QA 与交接
+## 7. 课件
+
+### 7.1 Course：Reveal（默认）
+
+- `03_slides/index.html` + `assets/deck.css`；
+- 每页 `<section class="c-slide" data-slide="01">…</section>`，`data-slide` 严格 1..N；
+- `Reveal.initialize` 固定 `1920×1080`、`margin:0`、`center:false`、无 controls/progress/slideNumber、`transition:'none'`、`hash:true`；
+- 动画页只放占位（段落名、声明时长、`record.html?segment=<name>`），**不嵌 MP4**。
+
+先同步 `.vendor` 并启动静态服务：
 
 ```powershell
-python D:\CourseStudio\tools\check-episode.py course-attention --mode technical --stage qa --strict
-python D:\CourseStudio\tools\check-links.py courses\course-attention
+powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\reveal-run.ps1 `
+  -Episode course-example -Port 3040
 ```
 
-检查项：
-
-- 锚点是否被代码块/引用/注释包裹；
-- `[SLIDE]` 是否严格 1..N，重复/跳号/乱序直接 FAIL；
-- 映射报告：`M anchor(s), N slide(s), buffer ...`；允许 `N >= M`，`M > N` FAIL；
-- Slidev 页数与锚点是否匹配；
-- 每个动画的 `.py` 与 `.mp4`；
-- Manim 禁用 API；声明时长 ≤20 秒；
-- 真实 MP4 用 `ffprobe` 读取的时长 ≤20 秒；读不到时长则终检 FAIL；
-- 研究包：`course`/`technical` 的 00–06 非空；`news`/`podcast` 的 source/claim 非空且含 `FACT`/`CLAIM`；`--strict` 或 `qa` 下缺失直接 FAIL；
-- `course`/`technical` 终检会实际运行 `slidev-run.ps1 -Mode build`；构建非 0 即 FAIL；
-- 检查器负向回归 `python tools/test_check_episode_negative.py` 7/7 通过；
-- `handoff.md` 是否存在。
-
-若 `Issues` 非空：只修相关文件并重跑；同一问题连续 3 次修不好就停下报告，不要放宽检查或删证据。`Warnings` 逐条写入 `handoff.md`。再把浏览器检查、抽帧结果写入 `qa/`。**G5**：`Issues` 为空，且 `course`/`technical` 的 Slidev build 实际通过；状态区分 `PASS_VERIFIED` / `PASS_STATIC` / `PARTIAL` / `NOT_RUN` / `FAIL`。
-
-## 8. 阶段六：OBS 录制（高容错）
-
-1. `slidev-run.ps1 -Mode dev` 启动；
-2. 浏览器全屏，确认 16:9；
-3. OBS：课件全屏 + 麦克风；
-4. **允许口误，不强求掐点**：出错停顿 2 秒重念，后期一刀切；
-5. 连续录制，用 2 秒静音/拍手作为切点；
-6. 录制后抽帧核对，填写 `qa/recording-checklist.md`。
-
-OBS 不归 AI 调用；未安装/未运行时标 `NOT_RUN`。
-
-## 9. 新闻视频模式
+打开 `http://127.0.0.1:3040/index.html`，F11 全屏。
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\new-episode.ps1 -Name news-example -Mode news
+python D:\CourseStudio\tools\check-episode.py course-example --mode course --stage slides
 ```
 
-与课程相同，但更短：
+`data-slide` 跳号、缺页序、本地资源缺失均 FAIL；strict 不跑 Slidev build。
 
-- 研究：`01_research/source-register.md` + `claims-ledger.md`；两项都必须非空，台账必须含 `FACT` 或 `CLAIM` 条目；
-- 讲稿：`02_scripts/lecture_script.md`，3–8 个 `[SLIDE]`；
-- 默认不做 Manim；
-- 检查：
+### 7.2 Technical / news / 旧课：Slidev
+
+`03_slides/slides.md`；P1 骨架 → P2 填充；动画只放占位。Manim 兜底 MP4 才可写 `<video>`；Motion 段落仍用 `record.html` 独立录制。
 
 ```powershell
-python D:\CourseStudio\tools\check-episode.py news-example --mode news --stage qa --strict
+powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\slidev-run.ps1 `
+  -Episode course-example -Mode dev -Port 3030
 ```
 
-新闻仍要区分“事件事实 / 来源主张 / 推断”，不把标题当证据。
-
-## 10. 播客模式
+## 8. QA
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\new-episode.ps1 -Name podcast-example -Mode podcast
-```
-
-纯音频，不需要 Slidev/Manim：
-
-- 研究：`source-register.md` + `claims-ledger.md` + 提纲；两项文件必须非空，台账必须含 `FACT` 或 `CLAIM`；
-- 讲稿：`02_scripts/lecture_script.md`，可不含视觉锚点；
-- 录制：OBS 音频轨或独立录音；
-- 检查：
-
-```powershell
-python D:\CourseStudio\tools\check-episode.py podcast-example --mode podcast --stage qa --strict
-```
-
-播客讲稿仍然要标注来源、日期、适用范围与未核实项。
-
-## 11. `/clear` 交接与停点
-
-只在检查点清上下文，不要每步都清：
-
-| 停点 | 时机 | 建议 |
-| --- | --- | --- |
-| C1 | 研究大纲冻结（R4） | `/clear` |
-| C2 | 讲稿全部模块完成 | `/clear` |
-| C3 | Slidev 骨架完成 | 可选 |
-| C4 | Slidev 填充完成 | `/clear` |
-| C5 | 每个/每两个 Manim 锚点 | 上下文变长时 `/clear` |
-| C6 | 最终 QA 前 | `/clear` |
-| C7 | 录制前 | `/clear` |
-
-每次 `/clear` 前更新 `handoff.md`：
-
-```markdown
-| 字段 | 内容 |
-| --- | --- |
-| 模式 | course / technical / news / podcast |
-| 阶段 | research / script / slides / manim / qa / recording |
-| 子步骤 | R1 / S1 / P1 / M1 / Q1 … |
-| 模块进度 | 例如 2/6 |
-| 动画进度 | 例如 1/2 |
-| 输入文件 | |
-| 输出文件 | |
-| 已运行命令 | |
-| 最后检查 | 命令 + 状态 |
-| 验证状态 | PASS_VERIFIED / PASS_STATIC / PARTIAL / NOT_RUN / FAIL |
-| 未决事项 | |
-| 下一步 | |
-```
-
-下一阶段只读 `handoff.md` + 指定输入，不重读整个项目。完整状态机见 [workflows/claude-orchestrator.md](../workflows/claude-orchestrator.md)。
-
-## 12. 故障排查
-
-| 现象 | 处理 |
-| --- | --- |
-| `check-episode.py` 报锚点被包裹 | 把 `[SLIDE]`/`[ANIMATION]` 改成纯文本独立成行 |
-| `[SLIDE]` 重复/跳号/乱序 | 改成严格 `01, 02, 03...`，不要重复或跳号 |
-| 映射报 `M > N` | 讲稿锚点比幻灯片多；减少锚点或增加页面，`N >= M` 才允许 |
-| 负向测试失败 | 说明严格门禁被破坏；先修 `check-episode.py`，不要跳过测试 |
-| 研究文件是 0 字节 | 补内容；空文件不能算通过 |
-| news/podcast 缺 source/claim | 同时补 `source-register.md` 与 `claims-ledger.md`，台账加 `FACT`/`CLAIM` |
-| 动画被报禁用 API | 去掉 `ThreeDScene`/`Camera3D`/粒子等，改 2D |
-| 场景声明超过 20 秒 | 拆分锚点或减少 `run_time`/`wait` |
-| 真实 MP4 超过 20 秒 | `ffprobe` 会判 FAIL；裁剪或拆分动画 |
-| `ffprobe` 不可用 | 确认 ffmpeg 的 `ffprobe` 在 PATH；终检不会放行 |
-| 渲染超 180 秒 | 脚本已杀进程树；简化场景，不要延长超时硬跑 |
-| 渲染失败 | 看控制台 `LOG=` 路径；日志会保留，不会自动删除 |
-| Slidev 构建失败 | 修 `slides.md`、视频路径或依赖；终检会实际 build |
-| Slidev 报 `markdown-it` 导出错误 | 确认 `tools/slidev-runtime` 锁定 `markdown-it@14.1.0` |
-| `slidev` 不在 PATH | 用 `slidev-run.ps1`，不要全局安装 |
-| 课程 `.venv` Python 版本不对 | `uv python pin 3.12`，删除 `.venv` 后 `uv sync` |
-| 新建集失败留下半成品 | `new-episode.ps1` 会自动回滚；残留时人工确认后删除 |
-| OBS 找不到 | 人工安装/确认；录制阶段 `NOT_RUN` |
-
-## 13. 一页速查
-
-```powershell
-# 建集
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\new-episode.ps1 -Name <slug> -Mode <mode>
-
-# Slidev 开发/构建
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\slidev-run.ps1 -Episode <slug> -Mode dev -Port 3030
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\slidev-run.ps1 -Episode <slug> -Mode build
-
-# 渲染单个动画
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\render-manim.ps1 -Episode <slug> -Name <name> -SceneClass <Class> -Quality l -TimeoutSeconds 180
-
-# 检查（按阶段）
-python D:\CourseStudio\tools\check-episode.py <slug> --mode <course|technical|news|podcast> --stage <research|script|slides|manim>
-python D:\CourseStudio\tools\check-episode.py <slug> --mode <mode> --stage qa --strict
+python D:\CourseStudio\tools\build-recording-package.py course-example
+python D:\CourseStudio\tools\check-episode.py course-example --mode course --stage qa --strict
+python D:\CourseStudio\tools\check-links.py courses\course-example
 python D:\CourseStudio\tools\test_check_episode_negative.py
 ```
 
-阶段顺序固定：**研究 → 讲稿 → Slidev → Manim → QA → OBS**。每个子步骤写 `handoff.md`；只在 C1/C2/C4/C5/C6/C7 检查点 `/clear`，不是每步都清。
+- Reveal 先运行 `reveal-run.ps1` 同步 `.vendor`；可另开终端跑检查。
+- `Issues` 必须为空；`Warnings` 写进 `handoff.md`。
+- `test_check_episode_negative.py` 必须 32/32。
+- 浏览器逐页检查；Reveal 全屏无控制条；Slidev 16:9、导航、视频、控制台。
+- OBS 录制仍为 `NOT_RUN`。
+
+## 9. 人工 OBS 录制
+
+1. 打开 `05_recording/checklist.md`；建议**先录 Motion 动画段，再录 Reveal/Slidev 课件页**；
+2. Reveal 用 `reveal-run.ps1`，Slidev 用 `slidev-run.ps1`，浏览器全屏；
+3. Motion 段落在 `record.html?segment=<name>` 逐段录；
+4. OBS 用 Display Capture / Windows Graphics Capture，**不要用 BitBlt/GDI 窗口采集**；
+5. 4K + 150% 缩放下 OBS 画布仍 1920×1080，对源缩放；全屏后等 2 秒；
+6. 每段前/后各留 2 秒；允许口误，停顿 2 秒重念；
+7. 录完 `ffprobe` 核对，更新 manifest `record_status`；
+8. 录像放 `05_recording/recordings/`（不提交）。
+
+> OBS 不由 AI 调用；未安装/未运行时标 `NOT_RUN`。
+
+## 10. handoff
+
+| 字段 | 内容 |
+| --- | --- |
+| 模式 | course / technical / news / podcast |
+| 阶段 | research / script / motion / recording / slides / qa / record |
+| 子步骤 | R1 / S1 / M1 / RC1 / P1 / Q1 / REC |
+| 模块进度 | 例如 2/6 |
+| 段落进度 | 例如 1/3 |
+| 动画引擎 | motion / manim（仅兜底） |
+| 课件类型 | Reveal / Slidev |
+| 录制包 | 未生成 / 已生成 / 已检查 |
+| 验证状态 | PASS_VERIFIED / PASS_STATIC / PARTIAL / NOT_RUN / FAIL |
+
+## 11. 常见失败
+
+| 现象 | 处理 |
+| --- | --- |
+| 缺 `[SEGMENT]` / HOLD / EMPHASIS / CUT | 补节奏标注；script/motion 阶段硬失败 |
+| motion 时长不是 45–90 | 调整段落；不要套用 Manim 的 20 秒限制 |
+| `[SEGMENT]` 与 `segments.json` 不一致 | 以 `segments.json` 为准修正 |
+| 缺 scene/project/cue | 补文件；cue 可由生成器从讲稿生成 |
+| `record.html` 不播放 | 确认 `auto="true"`；不要在升级前设 `quality`/`width`/`height` |
+| 用 `?present` 录制 | 改 `record.html?segment=<name>` |
+| Reveal 缺 `data-slide` / 跳号 | 按 1..N 修正 |
+| Reveal 本地资源缺失 | 先运行 `reveal-run.ps1` 同步 `.vendor` |
+| Reveal 里嵌了 MP4 | 删除；动画用 `record.html` 独立录制 |
+| Slidev 构建失败 | 修 `slides.md` 或依赖；终检会实际 build |
+| legacy Manim 超过 20 秒 | 仅兜底路径；拆分场景或改回 Motion |
+
+## 12. Legacy / fallback
+
+- **Manim**：仅 `segments.json` 的 `engine: "manim"`；单场景 ≤20 秒；`manim-isolation` + `render-manim.ps1`；不是默认。
+- **Slidev**：`technical` / `news` / 旧课；不是新 course 默认。
+- 旧课不强制迁移；新 episode 按 Motion + Reveal（course）或 Motion + Slidev（technical）推进。

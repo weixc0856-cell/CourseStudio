@@ -46,7 +46,7 @@
 
 ## 事实保真规则（经审查后采用）
 
-以下规则参考了公开的 `blader/humanizer` 与 `shir-danishyar/humanize` 的保留原则，经本项目审查后改写；没有复制全文，也没有安装这些 Skill。2026-10-25 通过 Skill 工具实际调用了 `humanizer` v3.1.0 的 embedded mode 审查 S08，记录见 `courses/transformer-course-pilot/qa/humanizer-invocation.md`（课程仓库内，根仓库不跟踪）。
+以下规则参考了公开的 `blader/humanizer` 与 `shir-danishyar/humanize` 的保留原则，经本项目审查后改写；没有复制全文，也没有安装这些 Skill。2026-10-25 通过 Skill 工具实际调用了 `humanizer` v3.1.0 的 embedded mode 审查 S08，记录见已退役归档 `courses/_retired/transformer-course-pilot/qa/humanizer-invocation.md`（legacy，不参与当前主路径）。
 
 - **不要改动**数字、公式、日期、单位、引文、引用、专有名词、链接目标和定义。
 - **不要新增**来源中没有的事实、数字、引文、人名或引用。

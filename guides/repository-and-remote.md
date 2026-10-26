@@ -29,7 +29,7 @@ git ls-remote origin refs/heads/main
 | `CLAUDE.md`、`README.md`、`.gitignore`、`.gitattributes` | 是 | 框架与规则 |
 | `guides/`、`workflows/`、`prompts/` | 是 | 文档与流程 |
 | `tools/` | 是 | 脚手架、检查器、运行时配置、Skill |
-| `courses/*` | **否** | 根 `.gitignore` 忽略；仅保留 `courses/README.md` |
+| `courses/*` | **默认否** | 根 `.gitignore` 默认忽略；例外：`courses/transformer-self-attention/` 源码与 `courses/_retired/README.md` |
 | `labs/` | **否** | 本地实验环境 |
 | `.uv-cache/`、`.venv*/`、`node_modules/`、`.pnpm-store/` | 否 | 缓存与依赖 |
 | `.config/**/.env`、密钥 | 否 | 本地配置 |
@@ -39,8 +39,14 @@ git ls-remote origin refs/heads/main
 ```gitignore
 /courses/*
 !/courses/README.md
+!/courses/transformer-self-attention/
+!/courses/_retired/
+/courses/_retired/*
+!/courses/_retired/README.md
 /labs/
 ```
+
+`transformer-self-attention` 的源码进入根仓库；`node_modules`、`.vendor`、`recordings`、`downloads`、`fulltext` 等仍忽略。其它课程仍建议独立仓库。
 
 课程自己的 `.gitignore` 由 `tools/new-episode.ps1` / `tools/new-course.ps1` 从 [tools/course.gitignore](../tools/course.gitignore) 复制。
 
@@ -49,17 +55,20 @@ git ls-remote origin refs/heads/main
 提交：
 
 - 框架文档：`CLAUDE.md`、`README.md`、`guides/`、`workflows/`、`prompts/`
-- 工具与模板：`tools/new-episode.ps1`、`tools/episode-template/`、`tools/check-episode.py`、`tools/render-manim.ps1`、`tools/slidev-run.ps1`
+- 工具与模板：`tools/new-episode.ps1`、`tools/episode-template/`、`tools/check-episode.py`、`tools/build-recording-package.py`、`tools/motion-run.ps1`、`tools/reveal-run.ps1`、`tools/slidev-run.ps1`、`tools/render-manim.ps1`
+- Motion 模板与运行配置：`tools/motion-runtime/`（package/lock/record.html/src）
+- Reveal 运行时配置：`tools/reveal-runtime/package.json`、`pnpm-lock.yaml`、`README.md`
 - Slidev 运行时配置：`tools/slidev-runtime/package.json`、`pnpm-lock.yaml`、`.npmrc`、`README.md`、`slides.md`
-- `manim-isolation` Skill：`tools/skills/manim-isolation/`
+- 动画 Skill：`tools/skills/motion-isolation/`（默认）、`tools/skills/manim-isolation/`（legacy/fallback）
 - `paper-search` 源码与本地 Skill：`tools/paper-search-mcp/`（见第 7 节）
 
 不提交：
 
-- `courses/*`（除 `courses/README.md`）与 `labs/`
+- `courses/*`（除 `courses/README.md`、`courses/transformer-self-attention/` 源码与 `courses/_retired/README.md`）与 `labs/`
 - PDF、MP4、音频、`animations/rendered/`、`media/`
 - `.venv*/`、`node_modules/`、`.pnpm-store/`、`.uv-cache/`
 - `.env`、密钥、`.mcp.json`、`CLAUDE.local.md`
+- `03_slides/.vendor/`、`05_recording/recordings/`（本地生成）
 
 ## 4. 新机器克隆与重建
 
@@ -84,20 +93,24 @@ copy D:\CourseStudio\tools\paper-search-mcp\.env.example D:\CourseStudio\.config
 
 再按需填入 API key；不要提交该文件。
 
-### 4.2 重建 Slidev 运行时
+### 4.2 重建 Reveal / Slidev 运行时
 
 ```powershell
+cd D:\CourseStudio\tools\reveal-runtime
+pnpm install
+
 cd D:\CourseStudio\tools\slidev-runtime
 pnpm install
 ```
 
-`node_modules/` 和 `.pnpm-store/` 不提交。`package.json` 已锁定 `@slidev/cli 53.0.0`、`@slidev/theme-default 0.25.0`、`vue 3.5.44`、`markdown-it 14.1.0`。
+Reveal 用于 course 课件；Slidev 用于 technical / news / 旧课。两者的 `node_modules/` 与 `.pnpm-store/` 都不提交。
 
 ### 4.3 挂载全局 Skill
 
 Windows 使用目录 junction（无需管理员）：
 
 ```powershell
+New-Item -ItemType Junction -Path "$HOME\.claude\skills\motion-isolation" -Target "D:\CourseStudio\tools\skills\motion-isolation"
 New-Item -ItemType Junction -Path "$HOME\.claude\skills\manim-isolation" -Target "D:\CourseStudio\tools\skills\manim-isolation"
 New-Item -ItemType Junction -Path "$HOME\.claude\skills\paper-search" -Target "D:\CourseStudio\tools\paper-search-mcp\skill\paper-search"
 ```
@@ -115,17 +128,17 @@ cd D:\CourseStudio\tools\paper-search-mcp
 
 ## 5. 新建课程并单独建仓库
 
-根仓库不跟踪课程；每门课程在自己的目录里初始化：
+根仓库默认不跟踪课程；`transformer-self-attention` 是当前源码例外。其它新课程仍在自己的目录里初始化：
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\new-episode.ps1 -Name course-attention -Mode technical
-cd D:\CourseStudio\courses\course-attention
+powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\new-episode.ps1 -Name course-example -Mode technical
+cd D:\CourseStudio\courses\course-example
 
 git init -b main
 git add .
 git status --short          # 确认没有 PDF/MP4/.venv
-git commit -m "course(course-attention): scaffold"
-git remote add origin git@github.com:weixc0856-cell/course-attention.git
+git commit -m "course(course-example): scaffold"
+git remote add origin git@github.com:weixc0856-cell/course-example.git
 git push -u origin main
 ```
 
@@ -154,7 +167,7 @@ git push
 课程：
 
 ```bash
-cd D:/CourseStudio/courses/course-attention
+cd D:/CourseStudio/courses/course-example
 git status --short
 git add -A
 git commit -m "course: script modules 1-2"
@@ -165,7 +178,7 @@ git push
 
 - 提交前先看 `git diff --cached --stat` 和 `git status --short`。
 - 不自动提交、不自动推送；人工确认后执行。
-- 课程与框架分开提交，不要从根仓库 `git add courses/`。
+- 课程与框架分开提交；除 `courses/transformer-self-attention/` 源码外，不要从根仓库 `git add courses/`。
 
 ## 6.1 GitHub Actions
 
@@ -249,7 +262,7 @@ GitHub 单文件限制 100 MB；大视频与授权素材放仓库外或 Git LFS�
 | --- | --- |
 | `Permission denied (publickey)` | `ssh -T git@github.com`；确认 SSH key 已加到 GitHub |
 | 远程为空，`git ls-remote` 无输出 | 首次 `git push -u origin main` 即可 |
-| 根仓库出现课程目录 | 检查 `.gitignore` 的 `/courses/*` 与 `!/courses/README.md` |
+| 根仓库出现课程目录 | 检查 `.gitignore` 的 `/courses/*` 与放行规则；仅 `transformer-self-attention` 源码和 `_retired/README.md` 应出现 |
 | 课程被记录成 gitlink | 课程应在自己目录 `git init`，不要嵌套进根仓库 |
 | `paper-search-mcp` 被记录成 gitlink | 不要恢复其 `.git`；按第 7 节 vendoring |
 | 换行符大量变更 | `git config core.autocrlf false` + `git add --renormalize .` |
@@ -262,5 +275,5 @@ GitHub 单文件限制 100 MB；大视频与授权素材放仓库外或 Git LFS�
 - [ ] `git remote -v` 指向 `git@github.com:weixc0856-cell/CourseStudio.git`
 - [ ] `git ls-remote origin refs/heads/main` 与本地 HEAD 一致
 - [ ] 暂存区没有 `.env`、PDF、MP4、ZIP、`.venv`、`node_modules`、`.pnpm-store`
-- [ ] 课程目录不在根仓库（`git ls-tree -r --name-only HEAD | grep '^courses/'` 只应输出 `courses/README.md`）
+- [ ] 根仓库的 `courses/` 只含 `README.md`、`transformer-self-attention/` 源码与 `_retired/README.md`，不含大产物
 - [ ] 课程自己的仓库单独提交、单独推送

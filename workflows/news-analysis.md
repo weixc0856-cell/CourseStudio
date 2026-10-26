@@ -97,13 +97,14 @@
 
 ```text
 news-project/
-├── research/source-register.md
-├── research/claims-ledger.md
-├── research/research-notes.md
-├── design/outline.md
-├── course/index.html 或 scripts/
-├── scripts/narration.md
-└── qa/
+├── 01_research/source-register.md
+├── 01_research/claims-ledger.md
+├── 01_research/research-notes.md
+├── 02_scripts/lecture_script.md
+├── 03_slides/（可选，3–8 页 Slidev）
+├── 05_recording/（如需要）
+├── qa/
+└── handoff.md
 ```
 
 ## 硬性规则

@@ -11,7 +11,7 @@
 3. [guides/delivery-quality.md](../guides/delivery-quality.md)。
 4. Skill 的 `references/source-and-claims.md`。
 5. 按领域读 `references/domain-checks.md`：AI/软件、科学论文、CFD/数值模拟、量化研究等。
-6. 使用 Manim 时读 `references/manim-workflow.md`。
+6. 默认动画路径读 `tools/skills/motion-isolation/SKILL.md`；只有 Manim 兜底时读 `references/manim-workflow.md`。
 
 ## 阶段
 
@@ -56,7 +56,7 @@
 
 ### 5. 视觉
 
-- 公式、矩阵、流程图、数据流优先 HTML/SVG；连续变换/几何/数值过程用 Manim。
+- 公式、矩阵、流程图、数据流优先 HTML/SVG；连续变换/几何/数值过程用 Motion Canvas（默认）；Manim 仅在 `engine=manim` 时兜底。
 - 图表标单位、轴、来源、定义。
 - 颜色映射一致；Q/K/V 等角色在页面和动画中使用同一套颜色。
 - 静态末态可读；不要只把关键信息放在运动中。
@@ -84,15 +84,14 @@
 
 ```text
 tech-explainer/
-├── research/source-register.md
-├── research/claims-ledger.md
-├── design/learning-objectives.md
-├── design/lesson-outline.md
-├── design/visual-storyboard.md
-├── course/index.html
-├── animations/manim/ 和 rendered/（如使用）
-├── scripts/narration.md
-└── qa/
+├── 01_research/00–06（source-register / claims-ledger 可并入）
+├── 02_scripts/lecture_script.md
+├── 03_slides/slides.md              # Slidev（technical 默认）
+├── 04_motion_src/                   # Motion Canvas（默认动画）
+├── 04_manim_src/scenes/             # 仅 engine=manim 兜底
+├── 05_recording/                    # 录制就绪包
+├── qa/
+└── handoff.md
 ```
 
 ## 硬性规则
