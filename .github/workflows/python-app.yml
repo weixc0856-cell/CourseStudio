@@ -1,5 +1,7 @@
 name: CourseStudio CI
 
+# Pin the runner and Node 24 actions to avoid ubuntu-latest migrations
+# and the Node 20 deprecation warning.
 on:
   push:
     branches: [ "main" ]
@@ -8,11 +10,11 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: "3.12"
     - name: Syntax Check Python Scripts

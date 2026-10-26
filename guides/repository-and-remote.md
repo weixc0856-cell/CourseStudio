@@ -167,6 +167,25 @@ git push
 - 不自动提交、不自动推送；人工确认后执行。
 - 课程与框架分开提交，不要从根仓库 `git add courses/`。
 
+## 6.1 GitHub Actions
+
+- Workflow：[.github/workflows/python-app.yml](../.github/workflows/python-app.yml)
+- Runner：`ubuntu-24.04`（固定，避免 `ubuntu-latest` 迁移）
+- Actions：`actions/checkout@v7`、`actions/setup-python@v7`（Node 24，避免 Node 20 弃用告警）
+- 步骤：
+  1. `python -m py_compile tools/check-episode.py tools/check-links.py`
+  2. `python tools/check-links.py .`
+  3. `python tools/test_check_episode_negative.py`
+- 不做：flake8 扫描 vendored `paper-search-mcp`、空 pytest、Slidev build、Manim 渲染。
+
+本地等效检查：
+
+```bash
+python -m py_compile tools/check-episode.py tools/check-links.py
+python tools/check-links.py .
+python tools/test_check_episode_negative.py
+```
+
 ## 7. 外部仓库与 vendoring
 
 `tools/paper-search-mcp` 来自：

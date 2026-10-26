@@ -199,4 +199,4 @@ pnpm --dir D:\CourseStudio\tools\slidev-runtime store prune
 - `paper-search` 是 CLI + Skill，不是已注册 MCP。
 - 人工教学评审与学习者测试不在自动流程内。
 - 真实 Episode 尚未开跑；当前只有临时 fixture 验证。
-- GitHub Actions 仍是通用 Python 模板：flake8 会扫描 vendored `paper-search-mcp` 并报 `F821`，且无 pytest 测试；尚未替换为项目专用 CI。
+- GitHub Actions 已改为项目专用 CI（`ubuntu-24.04` + `actions/checkout@v7` + `actions/setup-python@v7`）：只跑 `py_compile`、链接检查与负向测试；不构建 Slidev、不渲染 Manim；ffmpeg/PowerShell 缺失时相关负向测试可能跳过或退化。

@@ -38,7 +38,7 @@ Episode 目录契约
 | `check-episode.py` | `PASS_VERIFIED` | 严格编号、研究非空、ffprobe、真实 build、映射、7 项负向测试 |
 | `render-manim.ps1` | `PASS_VERIFIED` | 180s 超时；失败保留日志；成功清理 |
 | `new-episode.ps1` | `PASS_VERIFIED` | Python 3.12；`manim==0.22.0`；失败回滚 |
-| GitHub Actions | `PASS_VERIFIED` | 项目专用 CI：py_compile + link check + negative tests |
+| GitHub Actions | `PASS_VERIFIED` | 项目专用 CI：`ubuntu-24.04`；`checkout@v7` / `setup-python@v7`（Node 24）；py_compile + link check + negative tests |
 | OBS | `NOT_RUN` | 未在常规路径检测到；录制为人工阶段 |
 | Playwright PDF 导出 | `NOT_RUN` | 未安装；不影响 dev/build |
 
@@ -126,6 +126,7 @@ Episode 目录契约
 **v1.5 — CI 与文档同步**
 
 - 替换通用 Python workflow：不再 flake8 扫描 vendored 代码，不再跑空 pytest。
+- Runner 固定 `ubuntu-24.04`；`actions/checkout@v7` / `actions/setup-python@v7`（Node 24），消除迁移与 Node 20 弃用告警。
 - CI 增加负向测试步骤。
 - 修复 vendored `citeseerx.py` 缺失的 `import os`。
 - 清理文档中已删除课程与历史故障的过期描述。
@@ -156,7 +157,7 @@ Episode 目录契约
 | `paper-search` 不是 MCP | 只能通过 CLI/Skill 调用 | 已接受 |
 | 真实 Episode 未跑 | 端到端内容质量未验证 | `NOT_RUN` |
 | `course-studio` 未完整端到端 | 讲稿长度/节奏仍需实测 | `PARTIAL` |
-| CI 不构建 Slidev / 不渲染 Manim | CI 只保证语法、链接、负向测试 | 已知 |
+| CI 不构建 Slidev / 不渲染 Manim | Runner 固定 `ubuntu-24.04`；CI 只保证语法、链接、负向测试 | 已知 |
 | CI 的 ffmpeg/PowerShell 依赖 | 负向测试可能跳过或退化 | 已做跳过/容错 |
 | Skill 副本非全部链接 | 版本可能漂移 | `PARTIAL` |
 | 人工教学评审缺失 | 教学效果未验证 | `NOT_RUN` |
