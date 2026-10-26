@@ -10,6 +10,7 @@
 - `bin/paper-search` / `bin/paper-search.cmd`：项目内启动器，固定 venv 与 `.config/paper-search-mcp/.env`。
 - `skill/paper-search/SKILL.md`：Claude Code Skill 实体（全局 junction 指向这里）。
 - `UPSTREAM.md`：本文件。
+- Fix: 补充 `citeseerx.py` 缺失的 `import os` 以防运行时崩溃。
 
 ## Environment
 

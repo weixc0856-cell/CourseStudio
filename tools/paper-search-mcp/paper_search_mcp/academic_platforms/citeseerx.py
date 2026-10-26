@@ -4,6 +4,7 @@ from datetime import datetime
 import requests
 import logging
 import json
+import os
 import xml.etree.ElementTree as ET
 from urllib.parse import quote, urlencode
 from requests.exceptions import SSLError
