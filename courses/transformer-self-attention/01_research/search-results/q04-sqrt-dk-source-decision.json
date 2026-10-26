@@ -1,0 +1,9 @@
+{
+  "topic": "sqrt(d_k) scaling motivation",
+  "retrieved_at": "2026-10-26",
+  "decision": "no additional source collected in R1",
+  "primary_candidate": "S01 §3.2.1 p.4 + footnote 4 (p.4)",
+  "cross_check": "S03 code uses math.sqrt(d_k)",
+  "reason": "The original paper states the variance/gradient motivation and the Annotated Transformer code shows the same scaling; one primary source plus a code cross-check is sufficient for R1.",
+  "caveat": "pdftotext drops the radical in extracted text; verify against the PDF visual or S03 rendered formula in R3."
+}

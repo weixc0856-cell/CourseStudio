@@ -1,0 +1,27 @@
+{
+  "name": "coursestudio-motion",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "start": "vite",
+    "serve": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc && vite build"
+  },
+  "dependencies": {
+    "@motion-canvas/2d": "3.17.2",
+    "@motion-canvas/core": "3.17.2",
+    "@motion-canvas/player": "3.17.2"
+  },
+  "devDependencies": {
+    "@motion-canvas/ui": "3.17.2",
+    "@motion-canvas/vite-plugin": "3.17.2",
+    "typescript": "5.9.3",
+    "vite": "5.4.21"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

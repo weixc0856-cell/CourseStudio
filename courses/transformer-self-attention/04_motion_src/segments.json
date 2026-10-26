@@ -1,0 +1,19 @@
+{
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 60
+  },
+  "segments": [
+    {
+      "name": "scores_to_weights",
+      "engine": "motion",
+      "duration_seconds": 68,
+      "order": 1,
+      "scene": "scores_to_weights",
+      "project": "scores_to_weights",
+      "record_status": "NOT_RUN"
+    }
+  ],
+  "notes": "M5 animation segment. Scene/project/cue implemented in the Motion stage; declared duration/order must match the [SEGMENT] block. OBS recording is manual and record_status remains NOT_RUN."
+}

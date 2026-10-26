@@ -1,0 +1,61 @@
+{
+  "topic": "secondary teaching materials for self-attention intuition and scaled dot-product attention",
+  "retrieved_at": "2026-10-26",
+  "method": "direct URL retrieval; not an academic search",
+  "results": [
+    {
+      "id": "S02",
+      "title": "The Illustrated Transformer",
+      "author": "Jay Alammar",
+      "year": 2018,
+      "url": "https://jalammar.github.io/illustrated-transformer/",
+      "http_status": 200,
+      "saved_as": "01_research/downloads/illustrated-transformer.html",
+      "bytes": 47552,
+      "sha256": "375d8acf1096832ddfff288d93ff0ace405b6a4897bb96e280e6d71f3d353556",
+      "relevant_anchors": [
+        "#self-attention-at-a-high-level",
+        "#self-attention-in-detail",
+        "#matrix-calculation-of-self-attention"
+      ],
+      "out_of_scope": [
+        "#the-beast-with-many-heads",
+        "positional encoding",
+        "residuals/decoder/training sections"
+      ],
+      "role": "intuition cross-check; not primary evidence",
+      "note": "The 512/64 dimensions in this article are multi-head architecture choices; do not present them as a single-head requirement."
+    },
+    {
+      "id": "S03",
+      "title": "The Annotated Transformer",
+      "author": "Austin Huang; Suraj Subramanian; Jonathan Sum; Khalid Almubarak; Stella Biderman (v2022); original by Sasha Rush (2018)",
+      "year": 2022,
+      "url": "https://nlp.seas.harvard.edu/annotated-transformer/",
+      "http_status": 200,
+      "saved_as": "01_research/downloads/annotated-transformer.html",
+      "bytes": 9453410,
+      "sha256": "ee355423ba684165fca361da0f3d3b1c8fd0c79964732116af54d2f2ed73cb4a",
+      "relevant_sections": [
+        "Attention",
+        "Applications of Attention in our Model"
+      ],
+      "code_markers": [
+        "scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)",
+        "p_attn = scores.softmax(dim=-1)"
+      ],
+      "out_of_scope": [
+        "Multi-Head Attention",
+        "masking",
+        "training and decoding"
+      ],
+      "role": "formula/code cross-check; not primary evidence",
+      "note": "The code includes optional mask/dropout paths; they are out of scope for this episode."
+    }
+  ],
+  "screened_out": [
+    {
+      "reason": "Q01 arXiv search returned newer/derivative titles; the original was selected by arXiv ID 1706.03762v7, title, and author list."
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "episode": "transformer-self-attention",
+  "engine": "motion",
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 60
+  },
+  "segments": [
+    {
+      "order": 1,
+      "name": "scores_to_weights",
+      "engine": "motion",
+      "url": "http://localhost:9100/record.html?segment=scores_to_weights",
+      "declared_seconds": 68.0,
+      "cue": "cues/scores_to_weights.md",
+      "scene": "scores_to_weights",
+      "project": "scores_to_weights",
+      "record_status": "NOT_RUN"
+    }
+  ],
+  "generated_by": "tools/build-recording-package.py",
+  "notes": "Generated from 02_scripts/lecture_script.md and 04_motion_src/segments.json. Do not edit by hand."
+}

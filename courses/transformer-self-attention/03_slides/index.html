@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>transformer-self-attention</title>
+    <link rel="stylesheet" href="./.vendor/reveal/reveal.css" />
+    <link rel="stylesheet" href="./.vendor/reveal/theme/white.css" id="theme" />
+    <link rel="stylesheet" href="./assets/deck.css" />
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section class="c-slide cover" data-slide="01">
+          <p class="eyebrow">M1 · 为什么</p>
+          <h1>一个 token 不该只看自己</h1>
+          <p class="lede">处理一个位置时，同一序列里的其他位置可以提供信息。</p>
+          <div class="token-strip" aria-label="四个 token 的序列示意">
+            <span class="token">t1</span>
+            <span class="token">t2</span>
+            <span class="token active">t3</span>
+            <span class="token">t4</span>
+          </div>
+          <div class="two-callouts">
+            <div class="callout">
+              <span class="callout-label">只看自己</span>
+              <p>只由自己的向量决定</p>
+            </div>
+            <div class="callout accent">
+              <span class="callout-label">参考其他位置</span>
+              <p>同一序列内的信息可以参与</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="c-slide" data-slide="02">
+          <p class="eyebrow">M1 · 问题</p>
+          <h2>Attention 要回答什么</h2>
+          <div class="focus-question">当前这个位置，应该从其他位置取多少信息？</div>
+          <ul class="keypoints">
+            <li>每个位置仍有自己的输出。</li>
+            <li>这个输出由别处的内容按相关性混合而成。</li>
+            <li>本集追两条线：Q/K/V 的角色；score 如何变成分配。</li>
+          </ul>
+        </section>
+
+        <section class="c-slide" data-slide="03">
+          <p class="eyebrow">M2 · Q/K/V</p>
+          <h2>Query、Key、Value 各做什么</h2>
+          <div class="card-grid three">
+            <article class="card">
+              <p class="card-tag">Query</p>
+              <h3>我在找什么</h3>
+              <p>当前 token 发出的匹配请求。</p>
+            </article>
+            <article class="card">
+              <p class="card-tag">Key</p>
+              <h3>我能提供什么</h3>
+              <p>每个 token 摆出的可匹配信息。</p>
+            </article>
+            <article class="card">
+              <p class="card-tag">Value</p>
+              <h3>我实际被取用的内容</h3>
+              <p>被聚合、被带走的内容。</p>
+            </article>
+          </div>
+          <p class="note">query 决定和谁匹配；value 决定最后混进来的是什么。</p>
+        </section>
+
+        <section class="c-slide" data-slide="04">
+          <p class="eyebrow">M2 · 同源</p>
+          <h2>Self-attention：Q/K/V 同源</h2>
+          <ul class="keypoints">
+            <li>同一排 token 各自提供 query、key、value 三种角色。</li>
+            <li>单头可看作同一输入的不同投影；本集不展开投影矩阵。</li>
+          </ul>
+          <div class="flow" aria-label="同一输入到 Q/K/V">
+            <span>同一输入序列 t1–t4</span><span class="arrow">→</span>
+            <span>Q</span><span>K</span><span>V</span>
+          </div>
+          <p class="note">不是三句话；是同一来源的三种表示。</p>
+        </section>
+
+        <section class="c-slide" data-slide="05">
+          <p class="eyebrow">M3 · Score</p>
+          <h2>一行 query 对所有 key 打分</h2>
+          <p class="formula">s<sub>ij</sub> = q<sub>i</sub> · k<sub>j</sub></p>
+          <p class="note">toy 中 q1 = [3, 0, 0, 0]；先得到分数，不急着归一化。</p>
+          <div class="key-table" aria-label="q1 与四个 key 的点积">
+            <div class="key-row head"><span>key</span><span>向量</span><span>q1 · key</span></div>
+            <div class="key-row"><span>k1</span><span>[2, 0, 0, 0]</span><span class="score-hot">6</span></div>
+            <div class="key-row"><span>k2</span><span>[0, 2, 0, 0]</span><span>0</span></div>
+            <div class="key-row"><span>k3</span><span>[0, 0, 2, 0]</span><span>0</span></div>
+            <div class="key-row"><span>k4</span><span>[0, 0, 0, 2]</span><span>0</span></div>
+          </div>
+        </section>
+
+        <section class="c-slide" data-slide="06">
+          <p class="eyebrow">M3 · 矩阵</p>
+          <h2>Score 矩阵 S = QK^T</h2>
+          <div class="matrix-block centered">
+            <div class="matrix-head">S</div>
+            <div class="matrix-grid values" aria-label="4×4 score 矩阵">
+              <span></span><span>k1</span><span>k2</span><span>k3</span><span>k4</span>
+              <span>q1</span><span class="cell hot">6</span><span class="cell">0</span><span class="cell">0</span><span class="cell">0</span>
+              <span>q2</span><span class="cell">0</span><span class="cell">4</span><span class="cell">2</span><span class="cell">0</span>
+              <span>q3</span><span class="cell">2</span><span class="cell">2</span><span class="cell">2</span><span class="cell">2</span>
+              <span>q4</span><span class="cell">0</span><span class="cell">0</span><span class="cell">2</span><span class="cell">4</span>
+            </div>
+          </div>
+          <p class="note centered">行 = query，列 = key；toy 中 S 的形状是 4 × 4。</p>
+        </section>
+
+        <section class="c-slide" data-slide="07">
+          <p class="eyebrow">M4 · 缩放</p>
+          <h2>先缩放，再归一化</h2>
+          <p class="formula">S / √d<sub>k</sub> = S / 2</p>
+          <div class="transform-row">
+            <span class="transform-label">q1 行</span>
+            <span class="from">[6, 0, 0, 0]</span>
+            <span class="arrow">→</span>
+            <span class="to">[3, 0, 0, 0]</span>
+          </div>
+          <div class="card-grid three compact">
+            <article class="card">
+              <p class="card-tag">FACT</p>
+              <h3>方法</h3>
+              <p>除以 √d<sub>k</sub> 是原文做法。</p>
+            </article>
+            <article class="card">
+              <p class="card-tag">CLAIM</p>
+              <h3>动机</h3>
+              <p>大分数 → 小梯度；原文用 “We&nbsp;suspect”。</p>
+            </article>
+            <article class="card">
+              <p class="card-tag">INFERENCE</p>
+              <h3>假设下推导</h3>
+              <p>方差为 d<sub>k</sub>，依赖独立/零均值/单位方差假设。</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="c-slide" data-slide="08">
+          <p class="eyebrow">M5 · 权重</p>
+          <h2>每一行分数变成一组权重</h2>
+          <div class="content-grid">
+            <div>
+              <p class="formula small">A = row_softmax(S / √d<sub>k</sub>)</p>
+              <ul class="keypoints tight">
+                <li>按行做 softmax；每行非负，和为 1。</li>
+                <li>行是 query，列是 key。</li>
+              </ul>
+              <p class="note">停在 A；输出留给 M6。</p>
+            </div>
+            <div class="matrix-block compact">
+              <div class="matrix-head">A</div>
+              <div class="matrix-stack">
+                <div class="matrix-grid weights" aria-label="4×4 权重矩阵">
+                <span></span><span>k1</span><span>k2</span><span>k3</span><span>k4</span>
+                <span>t1</span><span class="cell hot">0.870</span><span class="cell">0.043</span><span class="cell">0.043</span><span class="cell">0.043</span>
+                <span>t2</span><span class="cell">0.083</span><span class="cell">0.610</span><span class="cell">0.225</span><span class="cell">0.083</span>
+                <span>t3</span><span class="cell warm">0.250</span><span class="cell warm">0.250</span><span class="cell warm">0.250</span><span class="cell warm">0.250</span>
+                  <span>t4</span><span class="cell">0.083</span><span class="cell">0.083</span><span class="cell">0.225</span><span class="cell">0.610</span>
+                </div>
+                <p class="matrix-caption">每行和 = 1</p>
+              </div>
+            </div>
+          </div>
+          <div class="segment-card compact">
+            <p class="eyebrow">独立动画段落</p>
+            <h3>scores_to_weights</h3>
+            <p>68 秒 · <code>record.html?segment=scores_to_weights</code> · 独立录屏，不嵌入 MP4</p>
+          </div>
+        </section>
+
+        <section class="c-slide" data-slide="09">
+          <p class="eyebrow">M5 · 对比</p>
+          <h2>集中与均匀：两种权重形态</h2>
+          <div class="compare-grid">
+            <article class="weight-panel">
+              <p class="card-tag">t1 行</p>
+              <h3>集中</h3>
+              <div class="weight-bars">
+                <div class="weight-row"><span>k1</span><div class="weight-track"><div class="weight-fill hot" style="width: 87%"></div></div><span class="weight-value">0.870</span></div>
+                <div class="weight-row"><span>k2</span><div class="weight-track"><div class="weight-fill" style="width: 4.3%"></div></div><span class="weight-value">0.043</span></div>
+                <div class="weight-row"><span>k3</span><div class="weight-track"><div class="weight-fill" style="width: 4.3%"></div></div><span class="weight-value">0.043</span></div>
+                <div class="weight-row"><span>k4</span><div class="weight-track"><div class="weight-fill" style="width: 4.3%"></div></div><span class="weight-value">0.043</span></div>
+              </div>
+            </article>
+            <article class="weight-panel">
+              <p class="card-tag">t3 行</p>
+              <h3>均匀</h3>
+              <div class="weight-bars">
+                <div class="weight-row"><span>k1</span><div class="weight-track"><div class="weight-fill warm" style="width: 25%"></div></div><span class="weight-value">0.250</span></div>
+                <div class="weight-row"><span>k2</span><div class="weight-track"><div class="weight-fill warm" style="width: 25%"></div></div><span class="weight-value">0.250</span></div>
+                <div class="weight-row"><span>k3</span><div class="weight-track"><div class="weight-fill warm" style="width: 25%"></div></div><span class="weight-value">0.250</span></div>
+                <div class="weight-row"><span>k4</span><div class="weight-track"><div class="weight-fill warm" style="width: 25%"></div></div><span class="weight-value">0.250</span></div>
+              </div>
+            </article>
+          </div>
+          <p class="note">分数差距大 → 更集中；分数相同 → 均匀。</p>
+          <p class="segment-inline">动画段落 <code>scores_to_weights</code> · 68s · <code>record.html?segment=scores_to_weights</code></p>
+        </section>
+
+        <section class="c-slide" data-slide="10">
+          <p class="eyebrow">M6 · 输出</p>
+          <h2>从权重矩阵 A 到输出 O</h2>
+          <p class="formula">O = A V</p>
+          <div class="value-row">
+            <span class="value-chip">v1 = [1, 0]</span>
+            <span class="value-chip">v2 = [0, 1]</span>
+            <span class="value-chip">v3 = [1, 1]</span>
+            <span class="value-chip">v4 = [2, 0]</span>
+          </div>
+          <div class="output-grid">
+            <article class="output-card">
+              <p class="card-tag">t1 行</p>
+              <p class="equation-line">o1 = 0.870 v1 + 0.043 v2 + 0.043 v3 + 0.043 v4</p>
+              <p class="output-value">≈ [1.000, 0.0866]</p>
+            </article>
+            <article class="output-card">
+              <p class="card-tag">t3 行</p>
+              <p class="equation-line">o3 = 0.25 (v1 + v2 + v3 + v4)</p>
+              <p class="output-value">= [1.000, 0.5000]</p>
+            </article>
+          </div>
+          <p class="note">每个位置各自得到一个输出向量，不是整句摘要。</p>
+        </section>
+
+        <section class="c-slide" data-slide="11">
+          <p class="eyebrow">M6 · 对比</p>
+          <h2>集中关注与均匀混合</h2>
+          <div class="compare-grid">
+            <article class="panel">
+              <p class="card-tag">t1 · 权重集中</p>
+              <h3>更像 v1</h3>
+              <p class="output-value">o1 ≈ [1.000, 0.0866]</p>
+            </article>
+            <article class="panel">
+              <p class="card-tag">t3 · 权重均匀</p>
+              <h3>更像四个 value 的平均</h3>
+              <p class="output-value">o3 = [1.000, 0.5000]</p>
+            </article>
+          </div>
+          <p class="note">同一套 V，不同的权重，得到不同的混合；集中/均匀没有哪个更对。</p>
+        </section>
+
+        <section class="c-slide" data-slide="12">
+          <p class="eyebrow">M7 · 边界</p>
+          <h2>本集覆盖什么，不覆盖什么</h2>
+          <div class="flow" aria-label="单头 self-attention 计算链">
+            <span>Q/K/V</span><span class="arrow">→</span>
+            <span>score</span><span class="arrow">→</span>
+            <span>/√d<sub>k</sub></span><span class="arrow">→</span>
+            <span>行 softmax</span><span class="arrow">→</span>
+            <span>A</span><span class="arrow">→</span>
+            <span>O=AV</span>
+          </div>
+          <div class="compare-grid">
+            <article class="panel">
+              <p class="card-tag">本集覆盖</p>
+              <ul class="keypoints tight small">
+                <li>Q/K/V 角色与同源</li>
+                <li>score → /√d<sub>k</sub> → 行 softmax → A</li>
+                <li>O = A V</li>
+              </ul>
+            </article>
+            <article class="panel">
+              <p class="card-tag">明确不做</p>
+              <ul class="keypoints tight small">
+                <li>多头、mask、位置编码</li>
+                <li>完整 Encoder–Decoder、训练</li>
+                <li>Q/K/V 投影矩阵展开</li>
+              </ul>
+            </article>
+          </div>
+          <p class="note">单头是教学抽象；toy 数字为 illustrative，不是训练结果。</p>
+        </section>
+      </div>
+    </div>
+
+    <script src="./.vendor/reveal/reveal.js"></script>
+    <script src="./.vendor/reveal/plugin/notes.js"></script>
+    <script>
+      Reveal.initialize({
+        width: 1920,
+        height: 1080,
+        margin: 0,
+        center: false,
+        controls: false,
+        progress: false,
+        slideNumber: false,
+        transition: 'none',
+        hash: true,
+        plugins: [RevealNotes],
+      });
+    </script>
+  </body>
+</html>
