@@ -3,7 +3,7 @@
 适用于新课程、新闻解读、技术/论文解读的单集生产。**默认布局**：`D:\CourseStudio\courses\<slug>\`，使用 Episode 目录契约 + Slidev 排版 + Manim 隔离舱。
 
 > 本文件是执行主线。通用课程原则仍见 [course.md](course.md)；本文件覆盖目录、工具调用、阶段 Gate 和交接契约。
-> 分块状态机、每轮模板与停点规则见 [claude-orchestrator.md](claude-orchestrator.md)；分场景操作教程见 [guides/episode-tutorial.md](../guides/episode-tutorial.md)。
+> 分块状态机、每轮模板与停点规则见 [claude-orchestrator.md](claude-orchestrator.md)；分场景操作教程见 [guides/episode-tutorial.md](../guides/episode-tutorial.md)；硬性验收与清理要求见 [guides/requirements.md](../guides/requirements.md)。
 
 ## 0. 模式选择
 

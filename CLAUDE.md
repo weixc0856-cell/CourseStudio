@@ -26,6 +26,7 @@
 - 编排状态机：[workflows/claude-orchestrator.md](workflows/claude-orchestrator.md)
 - 执行契约：[workflows/episode-pipeline.md](workflows/episode-pipeline.md)
 - 分场景教程：[guides/episode-tutorial.md](guides/episode-tutorial.md)
+- 硬性要求与清理：[guides/requirements.md](guides/requirements.md)
 - 远程与仓库：[guides/repository-and-remote.md](guides/repository-and-remote.md)
 - 产物根目录与模式：[courses/README.md](courses/README.md)
 - 工具清单：[tools/README.md](tools/README.md)

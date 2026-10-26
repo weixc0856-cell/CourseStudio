@@ -1,6 +1,6 @@
 # Episode 使用教程（课程 / 新闻 / 播客）
 
-本教程是 [episode-pipeline.md](../workflows/episode-pipeline.md) 的操作版。所有产物放在 `D:\CourseStudio\courses\<slug>\`；所有环境在项目内构建，不装全局 Python/npm 包。
+本教程是 [episode-pipeline.md](../workflows/episode-pipeline.md) 的操作版；硬性验收、清理与 Git 规则见 [requirements.md](requirements.md)。所有产物放在 `D:\CourseStudio\courses\<slug>\`；所有环境在项目内构建，不装全局 Python/npm 包。
 
 ## 0. 先决条件
 

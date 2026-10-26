@@ -175,6 +175,7 @@ courses/<slug>/
 ## 规范索引
 
 - [CLAUDE.md](CLAUDE.md)：Agent 出厂约定（先读编排规则、分块执行、停点）
+- [guides/requirements.md](guides/requirements.md)：课程制作、QA、清理与 Git 的硬性要求
 - [guides/editorial-voice.md](guides/editorial-voice.md)：中文技术写作与口播的编辑规范
 - [guides/audience-vs-internal.md](guides/audience-vs-internal.md)：观众版、教学限定与内部 QA 的边界
 - [guides/delivery-quality.md](guides/delivery-quality.md)：内容、准确性、视觉、可复现性与人工审查

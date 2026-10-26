@@ -108,6 +108,7 @@ course-<slug>/
 - [workflows/episode-pipeline.md](../workflows/episode-pipeline.md)：Episode + Slidev + Manim 隔离默认流程。
 - [workflows/claude-orchestrator.md](../workflows/claude-orchestrator.md)：分块状态机、停点与每轮执行模板。
 - [guides/episode-tutorial.md](../guides/episode-tutorial.md)：课程 / 新闻 / 播客分场景教程。
+- [guides/requirements.md](../guides/requirements.md)：QA、清理与 Git 硬性要求。
 - [workflows/course.md](../workflows/course.md)：课程制作通用流程。
 - [workflows/pipeline-audit.md](../workflows/pipeline-audit.md)：五阶段管线兼容性审计与修复记录。
 - [workflows/news-analysis.md](../workflows/news-analysis.md)：新闻解读流程。

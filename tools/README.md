@@ -48,3 +48,4 @@ python D:\CourseStudio\tools\check-episode.py course-attention --mode course --s
 - 需要重建 Slidev：在 `slidev-runtime/` 运行 `pnpm install`；不要把 `node_modules` 复制进课程。
 - 需要重建课程环境：在课程目录运行 `uv sync` / `uv add manim`；不要全局 `pip install`。
 - 任何新工具先放本目录，确认隔离后再接入 `workflows/episode-pipeline.md`。
+- 硬性验收、清理与 Git 规则见 [guides/requirements.md](../guides/requirements.md)。
