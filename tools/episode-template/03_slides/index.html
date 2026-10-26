@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{EPISODE}}</title>
+    <link rel="stylesheet" href="./.vendor/reveal/reveal.css" />
+    <link rel="stylesheet" href="./.vendor/reveal/theme/white.css" id="theme" />
+    <link rel="stylesheet" href="./assets/deck.css" />
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section class="c-slide cover" data-slide="01">
+          <p class="eyebrow">CourseStudio</p>
+          <h1>{{EPISODE}}</h1>
+          <p class="lede">课程副标题 / 本集核心问题</p>
+        </section>
+
+        <section class="c-slide" data-slide="02">
+          <p class="eyebrow">S02 · 机制</p>
+          <h2>把原理拆成几何步骤</h2>
+          <p class="lede">先建立对象，再展示变换，最后收束到结论。</p>
+          <div class="segment-card">
+            <p class="eyebrow">独立动画段落</p>
+            <h3>example</h3>
+            <p>声明时长：45 秒 · 录制入口 <code>record.html?segment=example</code></p>
+            <p class="note">本页只做前后衔接；动画由 OBS 独立录制，不在课件内嵌 MP4。</p>
+          </div>
+        </section>
+
+        <section class="c-slide" data-slide="03">
+          <p class="eyebrow">S03 · 证据与边界</p>
+          <h2>适用范围与限制</h2>
+          <p class="lede">把来源、假设与适用边界放在这里，不重复动画内容。</p>
+        </section>
+      </div>
+    </div>
+
+    <script src="./.vendor/reveal/reveal.js"></script>
+    <script src="./.vendor/reveal/plugin/notes.js"></script>
+    <script>
+      Reveal.initialize({
+        width: 1920,
+        height: 1080,
+        margin: 0,
+        center: false,
+        controls: false,
+        progress: false,
+        slideNumber: false,
+        transition: 'none',
+        hash: true,
+        plugins: [RevealNotes],
+      });
+    </script>
+  </body>
+</html>

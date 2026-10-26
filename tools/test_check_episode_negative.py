@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Negative tests for the check-episode.py hard-fail gates."""
+"""Regression tests for check-episode.py gates, including motion/recording."""
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
@@ -11,6 +12,7 @@ import unittest
 from pathlib import Path
 
 CHECKER = Path(__file__).with_name("check-episode.py")
+BUILDER = Path(__file__).with_name("build-recording-package.py")
 RESEARCH_FILES = [
     "00-task-brief.md",
     "01-source-inventory.md",
@@ -56,6 +58,15 @@ class Test(Scene):
     def construct(self):
         self.play(Create(Circle()), run_time=1)
 """
+MOTION_SCENE = """import {makeScene2D} from '@motion-canvas/2d';
+
+export default makeScene2D(function* () {});
+"""
+MOTION_PROJECT = """import {makeProject} from '@motion-canvas/core';
+import scene from '../scenes/demo?scene';
+
+export default makeProject({scenes: [scene]});
+"""
 
 
 class CheckEpisodeNegativeTests(unittest.TestCase):
@@ -95,6 +106,84 @@ class CheckEpisodeNegativeTests(unittest.TestCase):
         (ep / "03_slides" / "slides.md").write_text(SLIDES_2, encoding="utf-8")
         (ep / "handoff.md").write_text("# Handoff\n\nstage: test\n", encoding="utf-8")
         return ep
+
+    def make_motion_course(
+        self,
+        slug: str = "motion",
+        duration: float = 60,
+        engine: str | None = "motion",
+        include_package: bool = True,
+        segments: list[dict] | None = None,
+    ) -> Path:
+        ep = self.make_course(slug=slug, mode="technical")
+        (ep / "02_scripts" / "lecture_script.md").write_text(
+            "[SLIDE: 01]\n[SLIDE: 02]\n"
+            "[ANIMATION: demo]\n"
+            f"[SEGMENT: demo | {duration:g}s | order=1]\n"
+            "[VISUAL 00:00] 起手画面\n"
+            "[HOLD 00:10] 停 2 秒\n"
+            "[EMPHASIS 00:20] 强调关键量\n"
+            "[CUT 00:30] 切换视图\n"
+            "（口播：示例口播）\n",
+            encoding="utf-8",
+        )
+        motion = ep / "04_motion_src"
+        (motion / "src" / "scenes").mkdir(parents=True)
+        (motion / "src" / "projects").mkdir(parents=True)
+        (motion / "src" / "scenes" / "demo.tsx").write_text(MOTION_SCENE, encoding="utf-8")
+        (motion / "src" / "projects" / "demo.ts").write_text(MOTION_PROJECT, encoding="utf-8")
+
+        if segments is None:
+            entry = {
+                "name": "demo",
+                "duration_seconds": duration,
+                "order": 1,
+                "scene": "demo",
+                "record_status": "NOT_RUN",
+            }
+            if engine is not None:
+                entry["engine"] = engine
+            segments = [entry]
+        (motion / "segments.json").write_text(
+            json.dumps({"segments": segments}), encoding="utf-8"
+        )
+
+        if include_package:
+            package = ep / "05_recording"
+            (package / "cues").mkdir(parents=True)
+            (package / "recordings").mkdir()
+            (package / "cues" / "demo.md").write_text("# demo cue\n", encoding="utf-8")
+            (package / "checklist.md").write_text(
+                "# checklist\n\nOBS is manual.\n", encoding="utf-8"
+            )
+            (package / "manifest.json").write_text(
+                json.dumps({
+                    "segments": [{
+                        "name": "demo",
+                        "url": "http://localhost:9100/record.html?segment=demo",
+                        "declared_seconds": duration,
+                        "cue": "cues/demo.md",
+                        "order": 1,
+                    }]
+                }),
+                encoding="utf-8",
+            )
+        return ep
+
+    def motion_script(self, segment: str = "[SEGMENT: demo | 60s | order=1]", cues: list[str] | None = None) -> str:
+        if cues is None:
+            cues = [
+                "[VISUAL 00:00] 起手画面",
+                "[HOLD 00:10] 停 2 秒",
+                "[EMPHASIS 00:20] 强调关键量",
+                "[CUT 00:30] 切换视图",
+            ]
+        return (
+            "[SLIDE: 01]\n[SLIDE: 02]\n[ANIMATION: demo]\n"
+            + segment + "\n"
+            + "\n".join(cues) + "\n"
+            + "（口播：示例口播）\n"
+        )
 
     def add_fake_ffprobe(self, seconds: str = "25.0") -> dict | None:
         """Create a POSIX ffprobe shim so CI does not need ffmpeg installed."""
@@ -138,6 +227,24 @@ class CheckEpisodeNegativeTests(unittest.TestCase):
             errors="replace",
             env=env or os.environ.copy(),
             timeout=180,
+        )
+
+    def run_builder(self, slug: str, *extra: str) -> subprocess.CompletedProcess:
+        args = [
+            sys.executable,
+            str(BUILDER),
+            slug,
+            "--root",
+            str(self.root),
+            *extra,
+        ]
+        return subprocess.run(
+            args,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=120,
         )
 
     def assert_fails(self, proc: subprocess.CompletedProcess, needle: str) -> None:
@@ -229,6 +336,310 @@ class CheckEpisodeNegativeTests(unittest.TestCase):
         )
         proc = self.run_checker("ep", stage="slides", strict=True)
         self.assert_fails(proc, "exceed Slidev slide count")
+
+    # 8. Motion segment happy path.
+    def test_motion_stage_ok(self) -> None:
+        self.make_motion_course()
+        proc = self.run_checker("motion", stage="motion", strict=True)
+        output = (proc.stdout or "") + (proc.stderr or "")
+        self.assertEqual(proc.returncode, 0, output)
+        self.assertIn("engine=motion", output)
+        self.assertIn("declared=60.0s", output)
+        self.assertIn("real=NOT_VERIFIED", output)
+
+    # 9. Missing [SEGMENT] is a hard failure at script stage.
+    def test_timing_missing_segment(self) -> None:
+        ep = self.make_motion_course()
+        (ep / "02_scripts" / "lecture_script.md").write_text(
+            self.motion_script(segment=""), encoding="utf-8"
+        )
+        proc = self.run_checker("motion", stage="script", strict=True)
+        self.assert_fails(proc, "expected exactly one [SEGMENT]")
+
+    # 10. HOLD / EMPHASIS / CUT are required.
+    def test_timing_missing_required_cue(self) -> None:
+        ep = self.make_motion_course()
+        (ep / "02_scripts" / "lecture_script.md").write_text(
+            self.motion_script(cues=[
+                "[VISUAL 00:00] 起手画面",
+                "[EMPHASIS 00:20] 强调关键量",
+                "[CUT 00:30] 切换视图",
+            ]),
+            encoding="utf-8",
+        )
+        proc = self.run_checker("motion", stage="script", strict=True)
+        self.assert_fails(proc, "missing [HOLD]")
+
+    # 11. Timestamps must be strictly increasing.
+    def test_timing_out_of_order(self) -> None:
+        ep = self.make_motion_course()
+        (ep / "02_scripts" / "lecture_script.md").write_text(
+            self.motion_script(cues=[
+                "[VISUAL 00:20] 起手画面",
+                "[HOLD 00:10] 停 2 秒",
+                "[EMPHASIS 00:30] 强调关键量",
+                "[CUT 00:40] 切换视图",
+            ]),
+            encoding="utf-8",
+        )
+        proc = self.run_checker("motion", stage="script", strict=True)
+        self.assert_fails(proc, "strictly increasing")
+
+    # 12. The last cue may not exceed the declared duration.
+    def test_timing_beyond_duration(self) -> None:
+        ep = self.make_motion_course()
+        (ep / "02_scripts" / "lecture_script.md").write_text(
+            self.motion_script(cues=[
+                "[VISUAL 00:00] 起手画面",
+                "[HOLD 00:10] 停 2 秒",
+                "[EMPHASIS 00:20] 强调关键量",
+                "[CUT 01:10] 切换视图",
+            ]),
+            encoding="utf-8",
+        )
+        proc = self.run_checker("motion", stage="script", strict=True)
+        self.assert_fails(proc, "exceeds declared duration")
+
+    # 13. [SEGMENT] duration/order must match segments.json.
+    def test_timing_duration_mismatch(self) -> None:
+        ep = self.make_motion_course()
+        (ep / "02_scripts" / "lecture_script.md").write_text(
+            self.motion_script(segment="[SEGMENT: demo | 45s | order=1]"),
+            encoding="utf-8",
+        )
+        proc = self.run_checker("motion", stage="script", strict=True)
+        self.assert_fails(proc, "differs from segments.json")
+
+    # 14. Motion duration outside 45-90.
+    def test_motion_duration_out_of_range(self) -> None:
+        self.make_motion_course(duration=20)
+        proc = self.run_checker("motion", stage="motion", strict=True)
+        self.assert_fails(proc, "outside 45-90s")
+
+    # 15. Engine missing and both engines present.
+    def test_motion_engine_ambiguous(self) -> None:
+        ep = self.make_motion_course(engine=None)
+        (ep / "04_manim_src" / "scenes" / "demo.py").write_text(SCENE_OK, encoding="utf-8")
+        proc = self.run_checker("motion", stage="motion", strict=True)
+        self.assert_fails(proc, "engine missing and both")
+
+    # 16. Motion cue missing.
+    def test_motion_missing_cue(self) -> None:
+        ep = self.make_motion_course()
+        (ep / "05_recording" / "cues" / "demo.md").unlink()
+        proc = self.run_checker("motion", stage="motion", strict=True)
+        self.assert_fails(proc, "missing cue")
+
+    # 17. Order must be continuous.
+    def test_motion_order_gap(self) -> None:
+        self.make_motion_course(segments=[{
+            "name": "demo",
+            "engine": "motion",
+            "duration_seconds": 60,
+            "order": 2,
+            "scene": "demo",
+            "record_status": "NOT_RUN",
+        }])
+        proc = self.run_checker("motion", stage="motion", strict=True)
+        self.assert_fails(proc, "continuous 1..N")
+
+    # 18. Recording package is complete; recordings and their directory are optional.
+    def test_recording_package_ok(self) -> None:
+        ep = self.make_motion_course()
+        shutil.rmtree(ep / "05_recording" / "recordings")
+        proc = self.run_checker("motion", stage="recording", strict=False)
+        output = (proc.stdout or "") + (proc.stderr or "")
+        self.assertEqual(proc.returncode, 0, output)
+        self.assertIn("Recording: checked", output)
+        self.assertIn("recordings_dir=optional", output)
+        self.assertIn("recordings=0", output)
+
+    # 19. Recording package missing.
+    def test_recording_package_missing(self) -> None:
+        self.make_motion_course(include_package=False)
+        proc = self.run_checker("motion", stage="recording", strict=False)
+        self.assert_fails(proc, "missing or empty 05_recording/manifest.json")
+
+    # 20. Strict QA accepts a complete motion episode and recording package.
+    def test_motion_qa_strict_ok(self) -> None:
+        self.make_motion_course()
+        build = self.root / "tools" / "slidev-run.ps1"
+        build.write_text('Write-Output "fake build ok"\nexit 0\n', encoding="utf-8")
+        proc = self.run_checker("motion", stage="qa", strict=True)
+        output = (proc.stdout or "") + (proc.stderr or "")
+        self.assertEqual(proc.returncode, 0, output)
+        self.assertIn("Build:   PASS", output)
+        self.assertIn("Recording: checked", output)
+
+    # 21. Strict QA requires the recording package for motion episodes.
+    def test_motion_qa_strict_requires_recording_package(self) -> None:
+        self.make_motion_course(include_package=False)
+        build = self.root / "tools" / "slidev-run.ps1"
+        build.write_text('Write-Output "fake build ok"\nexit 0\n', encoding="utf-8")
+        proc = self.run_checker("motion", stage="qa", strict=True)
+        self.assert_fails(proc, "missing or empty 05_recording/manifest.json")
+
+    # 22. Builder generates manifest, cue and checklist from the script.
+    def test_builder_generates_package(self) -> None:
+        ep = self.make_motion_course()
+        proc = self.run_builder("motion")
+        output = (proc.stdout or "") + (proc.stderr or "")
+        self.assertEqual(proc.returncode, 0, output)
+
+        manifest = json.loads((ep / "05_recording" / "manifest.json").read_text(encoding="utf-8"))
+        segment = manifest["segments"][0]
+        self.assertEqual(segment["name"], "demo")
+        self.assertEqual(segment["declared_seconds"], 60)
+        self.assertIn("record.html?segment=demo", segment["url"])
+
+        cue = (ep / "05_recording" / "cues" / "demo.md").read_text(encoding="utf-8")
+        for tag in ("VISUAL", "HOLD", "EMPHASIS", "CUT"):
+            self.assertIn(tag, cue)
+        self.assertIn("口播", cue)
+
+        checklist = (ep / "05_recording" / "checklist.md").read_text(encoding="utf-8")
+        self.assertIn("| 1 | demo |", checklist)
+        self.assertIn("record.html?segment=demo", checklist)
+
+    # 23. Builder is idempotent and preserves record_status.
+    def test_builder_idempotent_and_preserves_status(self) -> None:
+        ep = self.make_motion_course()
+        self.assertEqual(self.run_builder("motion").returncode, 0)
+        manifest_path = ep / "05_recording" / "manifest.json"
+        cue_path = ep / "05_recording" / "cues" / "demo.md"
+        checklist_path = ep / "05_recording" / "checklist.md"
+        first_manifest = manifest_path.read_text(encoding="utf-8")
+        first_cue = cue_path.read_text(encoding="utf-8")
+        first_checklist = checklist_path.read_text(encoding="utf-8")
+
+        self.assertEqual(self.run_builder("motion").returncode, 0)
+        self.assertEqual(manifest_path.read_text(encoding="utf-8"), first_manifest)
+        self.assertEqual(cue_path.read_text(encoding="utf-8"), first_cue)
+        self.assertEqual(checklist_path.read_text(encoding="utf-8"), first_checklist)
+
+        data = json.loads(first_manifest)
+        data["segments"][0]["record_status"] = "RECORDED"
+        manifest_path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        self.assertEqual(self.run_builder("motion").returncode, 0)
+        updated = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(updated["segments"][0]["record_status"], "RECORDED")
+
+    # 24. Builder validates before writing; an invalid script leaves the package alone.
+    def test_builder_rejects_invalid_timing(self) -> None:
+        ep = self.make_motion_course()
+        manifest_path = ep / "05_recording" / "manifest.json"
+        before = manifest_path.read_text(encoding="utf-8")
+        (ep / "02_scripts" / "lecture_script.md").write_text(
+            self.motion_script(cues=[
+                "[VISUAL 00:00] 起手画面",
+                "[EMPHASIS 00:20] 强调关键量",
+                "[CUT 00:30] 切换视图",
+            ]),
+            encoding="utf-8",
+        )
+        proc = self.run_builder("motion")
+        self.assert_fails(proc, "missing [HOLD]")
+        self.assertEqual(manifest_path.read_text(encoding="utf-8"), before)
+
+    # 25. Builder requires at least one engine=motion segment.
+    def test_builder_requires_motion_entries(self) -> None:
+        ep = self.make_motion_course()
+        data = json.loads((ep / "04_motion_src" / "segments.json").read_text(encoding="utf-8"))
+        data["segments"][0]["engine"] = "manim"
+        (ep / "04_motion_src" / "segments.json").write_text(
+            json.dumps(data), encoding="utf-8"
+        )
+        proc = self.run_builder("motion")
+        self.assert_fails(proc, "no engine=motion")
+
+    # 26. --check validates without writing.
+    def test_builder_check_only(self) -> None:
+        ep = self.make_motion_course()
+        manifest_path = ep / "05_recording" / "manifest.json"
+        before = manifest_path.read_text(encoding="utf-8")
+        proc = self.run_builder("motion", "--check")
+        output = (proc.stdout or "") + (proc.stderr or "")
+        self.assertEqual(proc.returncode, 0, output)
+        self.assertIn("CHECK_ONLY", output)
+        self.assertEqual(manifest_path.read_text(encoding="utf-8"), before)
+
+    # 27. Reveal deck adapter counts data-slide.
+    def test_reveal_deck_adapter(self) -> None:
+        ep = self.make_course()
+        (ep / "03_slides" / "slides.md").unlink()
+        (ep / "03_slides" / "index.html").write_text(
+            '<section data-slide="01">One</section>\n'
+            '<section data-slide="02">Two</section>\n',
+            encoding="utf-8",
+        )
+        proc = self.run_checker("ep", stage="slides", strict=True)
+        output = (proc.stdout or "") + (proc.stderr or "")
+        self.assertEqual(proc.returncode, 0, output)
+        self.assertIn("[reveal]", output)
+        self.assertIn("Mapping: 2 anchor(s), 2 slide(s)", output)
+
+    # 28. Reveal deck without data-slide is invalid.
+    def test_reveal_missing_data_slide(self) -> None:
+        ep = self.make_course()
+        (ep / "03_slides" / "slides.md").unlink()
+        (ep / "03_slides" / "index.html").write_text(
+            '<div class="slides"><section class="c-slide">One</section>'
+            '<section class="c-slide">Two</section></div>\n',
+            encoding="utf-8",
+        )
+        proc = self.run_checker("ep", stage="slides", strict=True)
+        self.assert_fails(proc, "no data-slide")
+
+    # 29. Reveal data-slide values must be strictly 1..N in document order.
+    def test_reveal_page_gap(self) -> None:
+        ep = self.make_course()
+        (ep / "03_slides" / "slides.md").unlink()
+        (ep / "03_slides" / "index.html").write_text(
+            '<section class="c-slide" data-slide="01">One</section>\n'
+            '<section class="c-slide" data-slide="03">Three</section>\n',
+            encoding="utf-8",
+        )
+        proc = self.run_checker("ep", stage="slides", strict=True)
+        self.assert_fails(proc, "strictly 1..N")
+
+    # 30. Local Reveal assets must exist.
+    def test_reveal_missing_local_asset(self) -> None:
+        ep = self.make_course()
+        (ep / "03_slides" / "slides.md").unlink()
+        (ep / "03_slides" / "index.html").write_text(
+            '<link rel="stylesheet" href="./assets/missing.css" />\n'
+            '<section class="c-slide" data-slide="01">One</section>\n'
+            '<section class="c-slide" data-slide="02">Two</section>\n',
+            encoding="utf-8",
+        )
+        proc = self.run_checker("ep", stage="slides", strict=True)
+        self.assert_fails(proc, "missing local asset")
+
+    # 31. Reveal strict QA skips the Slidev build.
+    def test_reveal_strict_skips_slidev_build(self) -> None:
+        ep = self.make_course()
+        (ep / "03_slides" / "slides.md").unlink()
+        (ep / "03_slides" / "index.html").write_text(
+            '<section class="c-slide" data-slide="01">One</section>\n'
+            '<section class="c-slide" data-slide="02">Two</section>\n',
+            encoding="utf-8",
+        )
+        proc = self.run_checker("ep", stage="qa", strict=True)
+        output = (proc.stdout or "") + (proc.stderr or "")
+        self.assertEqual(proc.returncode, 0, output)
+        self.assertIn("SKIPPED", output)
+
+    # 32. Legacy Manim fallback remains available with a deprecation warning.
+    def test_legacy_manim_deprecation(self) -> None:
+        ep = self.make_course()
+        (ep / "02_scripts" / "lecture_script.md").write_text(
+            "[SLIDE: 01]\n[SLIDE: 02]\n[ANIMATION: test]\n", encoding="utf-8"
+        )
+        (ep / "04_manim_src" / "scenes" / "test.py").write_text(SCENE_OK, encoding="utf-8")
+        (ep / "03_slides" / "public" / "test.mp4").write_bytes(b"not-a-real-video")
+        proc = self.run_checker("ep", stage="script", strict=False)
+        output = (proc.stdout or "") + (proc.stderr or "")
+        self.assertIn("legacy Manim", output)
 
 
 if __name__ == "__main__":

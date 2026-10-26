@@ -1,0 +1,8 @@
+{
+  "name": "coursestudio-reveal-runtime",
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "reveal.js": "6.0.2"
+  }
+}

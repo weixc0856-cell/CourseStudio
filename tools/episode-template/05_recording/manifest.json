@@ -1,0 +1,24 @@
+{
+  "episode": "{{EPISODE}}",
+  "engine": "motion",
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 60
+  },
+  "segments": [
+    {
+      "order": 1,
+      "name": "example",
+      "engine": "motion",
+      "url": "http://localhost:9100/record.html?segment=example",
+      "declared_seconds": 45.0,
+      "cue": "cues/example.md",
+      "scene": "example",
+      "project": "example",
+      "record_status": "NOT_RUN"
+    }
+  ],
+  "generated_by": "tools/build-recording-package.py",
+  "notes": "Regenerate with tools/build-recording-package.py; do not edit by hand except record_status."
+}

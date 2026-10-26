@@ -30,7 +30,7 @@ mdc: true
 
 ## S03 — 动画
 
-<!-- Manim 产物放在 03_slides/public/，Slidev 中这样引用： -->
+<!-- 仅 Manim 兜底：Motion 段落不在这里嵌 MP4，使用 record.html 独立录屏。 -->
 <!-- <video src="/example_name.mp4" controls class="w-full" /> -->
 
 动画页占位。

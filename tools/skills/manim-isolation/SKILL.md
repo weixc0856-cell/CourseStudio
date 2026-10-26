@@ -1,9 +1,14 @@
 ---
 name: manim-isolation
-description: Manim 动画独立生成与渲染隔离舱。读取讲稿中的 [ANIMATION: name] 锚点，在 04_manim_src/scenes 生成单一场景的 ManimCE 源码，调用项目本地环境渲染，并把 MP4 输出到 03_slides/public。用于把动画代码与教研、讲稿、Slidev 排版严格隔离。
+description: Legacy/fallback Manim 隔离舱。仅当 segments.json 的 engine=manim 时使用；读取 [ANIMATION: name]，生成单一 ManimCE 场景并渲染 MP4。默认动画路径是 motion-isolation（Motion Canvas 45–90 秒 + record.html）。
 ---
 
-# Manim Isolation Cabin (V1)
+# Manim Isolation Cabin (Legacy / Fallback)
+
+> **LEGACY / FALLBACK ONLY.**
+> Motion Canvas（`motion-isolation`）是默认动画主路径：一个 `[ANIMATION: name]` 对应 45–90 秒叙事段落，由 `record.html` 独立录制。
+> 只有 `04_motion_src/segments.json` 中 `engine: "manim"` 的锚点才使用本技能。
+> 本文件中的“单场景 ≤20 秒”和 MP4 输出是 legacy 约束，不是框架默认；不要把它们套回 Motion 段落。
 
 ## 1. 使命与边界
 

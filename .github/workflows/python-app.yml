@@ -19,10 +19,10 @@ jobs:
         python-version: "3.12"
     - name: Syntax Check Python Scripts
       run: |
-        python -m py_compile tools/check-episode.py tools/check-links.py
+        python -m py_compile tools/check-episode.py tools/check-links.py tools/script_timing.py tools/build-recording-package.py
     - name: Run Link Checker
       run: |
         python tools/check-links.py .
-    - name: Run Negative Tests
+    - name: Run 32 Regression Tests
       run: |
         python tools/test_check_episode_negative.py

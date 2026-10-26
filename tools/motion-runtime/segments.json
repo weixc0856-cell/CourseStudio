@@ -1,0 +1,18 @@
+{
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 60
+  },
+  "segments": [
+    {
+      "name": "example",
+      "engine": "motion",
+      "duration_seconds": 45,
+      "order": 1,
+      "scene": "example",
+      "record_status": "NOT_RUN"
+    }
+  ],
+  "notes": "Template example. Replace with anchors from 02_scripts/lecture_script.md. Motion segments must be 45-90 seconds; Manim fallback keeps the legacy limit."
+}
