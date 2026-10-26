@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Project-local launcher for paper-search.
+# Keeps Python deps in tools/paper-search-mcp/.venv and config in
+# D:/CourseStudio/.config/paper-search-mcp/.env (no global install, no PATH change).
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PAPER_SEARCH_MCP_ENV_FILE="${PAPER_SEARCH_MCP_ENV_FILE:-D:/CourseStudio/.config/paper-search-mcp/.env}"
+exec "$HERE/../.venv/Scripts/paper-search.exe" "$@"

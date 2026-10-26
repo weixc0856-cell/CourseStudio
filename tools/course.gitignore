@@ -1,0 +1,146 @@
+# =============================================================================
+# CourseStudio — course repository .gitignore
+#
+# 复制位置：每门课程根目录（tools/new-course.ps1 会自动复制）。
+# 适用布局：一门课程 = 一个独立 Git 仓库。
+#
+# 提交：源码、pyproject.toml、uv.lock、.python-version、页面、Manim 源码、
+#       口播稿、研究台账、检索 JSON、QA 报告、README。
+# 不提交：PDF 全文、抽取文本、渲染视频、虚拟环境、缓存、浏览器配置、密钥。
+# =============================================================================
+
+# --- 密钥与本地配置 ---------------------------------------------------------
+.env
+.envrc
+.env.*
+!.env.example
+.mcp.json
+.claude/settings.local.json
+CLAUDE.local.md
+secrets*.json
+credentials*.json
+*.pem
+*.key
+*.p12
+
+# --- Python -----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.venv*/
+venv*/
+ENV/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+build/
+dist/
+wheels/
+.eggs/
+.ipynb_checkpoints/
+.tox/
+.nox/
+.hypothesis/
+.pip-wheel-metadata/
+*.prof
+.cache/
+
+# --- uv ---------------------------------------------------------------------
+# 不要忽略 uv.lock 与 .python-version：它们是复现实验环境的一部分。
+.uv-cache/
+
+# --- Node / Slidev（仅在使用时）--------------------------------------------
+node_modules/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.vite/
+.slidev/
+slides-export/
+*.har
+.eslintcache
+*.tsbuildinfo
+coverage/
+.next/
+.nuxt/
+.svelte-kit/
+.turbo/
+.parcel-cache/
+
+# --- Manim / 媒体 -----------------------------------------------------------
+media/
+animations/rendered/
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.avi
+*.wav
+*.mp3
+*.m4a
+
+# --- 研究原始材料 -----------------------------------------------------------
+# 提交：search-results/*.json、claims.json、quote-verification.csv、
+#       extraction-report.json、metrics.json、qa-check.json、00–06 交付物。
+# 不提交：PDF、逐页文本、数据库缓存、抓取日志（可由来源与脚本重建/重取）。
+research/downloads/
+research/fulltext/
+research/**/*.pdf
+research/**/*.sqlite3
+research/**/*.db
+research/**/*.stderr.txt
+
+# --- Episode 布局（若课程采用 00_raw_materials / 01_research / 03_slides）---
+00_raw_materials/**/*.pdf
+00_raw_materials/**/*.epub
+01_research/downloads/
+01_research/fulltext/
+03_slides/public/*.mp4
+03_slides/public/*.webm
+03_slides/public/*.wav
+03_slides/public/*.mp3
+04_manim_src/media/
+
+# --- QA / 浏览器 / 渲染中间产物 --------------------------------------------
+qa/chrome-profile/
+qa/chrome-profile*/
+qa/rendered-frames/
+playwright-report/
+test-results/
+
+# --- 操作系统与编辑器 -------------------------------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+.history/
+tmp/
+.tmp/
+*.tmp
+*.bak
+*.orig
+*.rej
+*.lnk
+$RECYCLE.BIN/
+.Trash-*/
+
+# --- 日志与归档 -------------------------------------------------------------
+*.log
+logs/
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.tgz

@@ -1,0 +1,165 @@
+# =============================================================================
+# CourseStudio — root .gitignore
+#
+# 仓库布局（默认）：
+#   - 根仓库只跟踪“框架”：CLAUDE.md、README、guides/、workflows/、prompts/、tools/。
+#   - 每门课程在 courses/<slug>/ 内独立 `git init`；课程文档、研究台账、页面、
+#     动画源码由课程自己的 .gitignore（tools/course.gitignore）管理。
+#   - 因此根仓库忽略 /courses/*，只保留 courses/README.md。
+#
+# 课程仓库内的原则：
+#   - 提交：源码、锁文件、研究台账、QA 报告、页面与动画源码。
+#   - 不提交：PDF 全文、抽取文本、渲染视频、虚拟环境、缓存、密钥。
+#   - 大体积成片与授权素材放仓库外或 Git LFS。
+# =============================================================================
+
+# --- 仓库布局 ---------------------------------------------------------------
+# 根仓库不跟踪课程与实验目录；课程各自是独立仓库。
+/courses/*
+!/courses/README.md
+/labs/
+
+# --- 密钥与本地配置 ---------------------------------------------------------
+.env
+.envrc
+.env.*
+!.env.example
+.config/**/.env
+.config/**/*.key
+.config/**/*.pem
+.mcp.json
+.claude/settings.local.json
+CLAUDE.local.md
+secrets*.json
+credentials*.json
+*.pem
+*.key
+*.p12
+
+# --- Python -----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.venv*/
+venv*/
+ENV/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+build/
+dist/
+wheels/
+.eggs/
+.ipynb_checkpoints/
+.tox/
+.nox/
+.hypothesis/
+.pip-wheel-metadata/
+*.prof
+.cache/
+
+# --- uv ---------------------------------------------------------------------
+# 缓存不提交；uv.lock 与 .python-version 必须提交以保证可复现。
+.uv-cache/
+
+# --- Node / Slidev ----------------------------------------------------------
+node_modules/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.vite/
+.slidev/
+slides-export/
+*.har
+.eslintcache
+*.tsbuildinfo
+coverage/
+.next/
+.nuxt/
+.svelte-kit/
+.turbo/
+.parcel-cache/
+
+# --- Manim / 媒体 -----------------------------------------------------------
+**/media/
+**/animations/rendered/
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.avi
+*.wav
+*.mp3
+*.m4a
+
+# --- 研究原始材料 -----------------------------------------------------------
+# 保留：search-results/*.json、claims.json、quote-verification.csv、
+# extraction-report.json、metrics.json、qa-check.json、source/claim ledgers。
+# 不保留：PDF 全文、逐页文本、数据库缓存、抓取日志。
+**/research/downloads/
+**/research/fulltext/
+**/research/**/*.pdf
+**/research/**/*.sqlite3
+**/research/**/*.db
+**/research/**/*.stderr.txt
+
+# --- Episode 布局（00_raw_materials / 01_research / 03_slides / 04_manim_src）---
+**/00_raw_materials/**/*.pdf
+**/00_raw_materials/**/*.epub
+**/01_research/downloads/
+**/01_research/fulltext/
+**/03_slides/public/*.mp4
+**/03_slides/public/*.webm
+**/03_slides/public/*.wav
+**/03_slides/public/*.mp3
+**/04_manim_src/media/
+
+# --- QA / 浏览器 / 渲染中间产物 --------------------------------------------
+**/qa/chrome-profile*/
+**/qa/chrome-profile-test*/
+**/qa/rendered-frames/
+playwright-report/
+test-results/
+
+# --- 操作系统与编辑器 -------------------------------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+.history/
+tmp/
+.tmp/
+*.tmp
+*.bak
+*.orig
+*.rej
+*.lnk
+$RECYCLE.BIN/
+.Trash-*/
+
+# --- 日志与归档 -------------------------------------------------------------
+*.log
+logs/
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+
+# --- 嵌套仓库 ---------------------------------------------------------------
+# 根仓库已忽略 /courses/* 与 /labs/；课程/实验在各自目录 git init。
+# tools/paper-search-mcp 是外部仓库；若要在根仓库跟踪，请改为 submodule，
+# 不要直接嵌入其 .git（否则 Git 只记录 gitlink）。
+# /tools/paper-search-mcp/
