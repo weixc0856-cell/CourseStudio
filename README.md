@@ -132,7 +132,7 @@ courses/<slug>/
 
 程序检查通过只证明程序检查通过。内容正确性、视觉质量和教学效果是不同层次的判断；没有人工评审或学习者测试时，不要写成“已验证”。
 
-`--stage qa --strict` 在 `course`/`technical` 下会实际运行 Slidev build；构建失败、ffprobe 时长超限、研究文件为空或 slide 编号重复/跳号，都不能算通过。
+`--stage qa --strict` 在 `course`/`technical` 下会实际运行 Slidev build；构建失败、ffprobe 时长超限、研究文件为空或 slide 编号重复/跳号，都不能算通过。检查器自身用 `python tools/test_check_episode_negative.py` 做 7 项负向回归；`[SLIDE]` 锚点数 `M` 与页数 `N` 必须满足 `M <= N`，并输出 mapping 报告。
 
 ## 开始一次新任务
 

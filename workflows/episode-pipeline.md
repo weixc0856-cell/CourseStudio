@@ -263,6 +263,7 @@ python D:\CourseStudio\tools\check-episode.py <slug> --mode <mode> --stage manim
 ```powershell
 python D:\CourseStudio\tools\check-episode.py <slug> --mode <mode> --stage qa --strict
 python D:\CourseStudio\tools\check-links.py courses\<slug>
+python D:\CourseStudio\tools\test_check_episode_negative.py
 ```
 
 若出现 `Issues`：只修相关文件，重跑；同一问题连续 3 次修不好就停下报告，不要放宽检查或删证据。
@@ -271,6 +272,7 @@ python D:\CourseStudio\tools\check-links.py courses\<slug>
 
 - 讲稿锚点是否被代码块/引用块/注释包裹（包裹即 FAIL）；
 - `[SLIDE: NN]` 是否严格按 1..N 递增；重复、跳号、乱序均 FAIL；
+- 讲稿锚点数 `M` 与 Slidev 页数 `N` 的映射：允许 `N >= M` 并输出 buffer；`M > N` FAIL；
 - Slidev 页数（`news`/`podcast` 可无 Slidev）；
 - 每个动画的 `.py` 与 `.mp4`；
 - Manim 场景是否使用禁用 API、声明时长是否超过 20 秒；
@@ -286,7 +288,7 @@ python D:\CourseStudio\tools\check-links.py courses\<slug>
 - 观众版泄漏扫描；
 - 将命令、退出码、结果写入 `qa/`。
 
-**Gate G5**：`check-episode.py --mode <mode> --stage qa --strict` 返回 0 且 `Issues` 为空；`course`/`technical` 的 Slidev build 必须实际通过；QA 报告区分 `PASS_VERIFIED` / `PASS_STATIC` / `PARTIAL` / `NOT_RUN` / `FAIL`。
+**Gate G5**：`check-episode.py --mode <mode> --stage qa --strict` 返回 0 且 `Issues` 为空；映射满足 `M <= N`；`course`/`technical` 的 Slidev build 必须实际通过；`test_check_episode_negative.py` 7/7 通过；QA 报告区分 `PASS_VERIFIED` / `PASS_STATIC` / `PARTIAL` / `NOT_RUN` / `FAIL`。
 
 ### Stage 6 — OBS 录制（人工，高容错）
 

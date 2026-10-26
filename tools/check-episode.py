@@ -218,7 +218,8 @@ def main() -> int:
 
     research_ok, research_detail = research_status(episode, args.mode)
     if not research_ok:
-        (issues if stage == "research" else warnings).append(research_detail)
+        hard_fail = stage == "research" or stage == "qa" or args.strict
+        (issues if hard_fail else warnings).append(research_detail)
 
     script_path = episode / "02_scripts" / "lecture_script.md"
     slides_path = episode / "03_slides" / "slides.md"
@@ -255,7 +256,7 @@ def main() -> int:
     if slides_path.exists():
         slides_text = slides_path.read_text(encoding="utf-8", errors="replace")
     elif args.mode in {"course", "technical"}:
-        (issues if stage in {"slides", "manim", "qa"} else warnings).append(
+        (issues if stage in {"slides", "manim", "qa"} or args.strict else warnings).append(
             f"missing {slides_path.relative_to(episode)}"
         )
     elif args.mode == "news":
@@ -276,9 +277,15 @@ def main() -> int:
     if args.mode in {"course", "technical"} and not slide_anchors and stage in {"script", "slides", "manim", "qa"}:
         warnings.append("no [SLIDE: NN] anchors in lecture_script.md")
     if slide_anchors and not slides_text:
-        (issues if stage in {"slides", "manim", "qa"} else warnings).append(
+        (issues if stage in {"slides", "manim", "qa"} or args.strict else warnings).append(
             "slide anchors exist but 03_slides/slides.md is missing"
         )
+    unique_slide_anchors = len(set(slide_anchors))
+    slide_mapping = {
+        "anchors": unique_slide_anchors,
+        "slides": slide_count,
+        "buffer": slide_count - unique_slide_anchors,
+    }
     if slide_anchors:
         expected = list(range(1, len(slide_anchors) + 1))
         if slide_anchors != expected:
@@ -286,9 +293,9 @@ def main() -> int:
                 "slide anchors must be strictly 1..N with no duplicates, gaps or out-of-order entries; found "
                 + ", ".join(str(x) for x in slide_anchors)
             )
-        if slide_count and slide_anchors[-1] > slide_count:
+        if unique_slide_anchors > slide_count:
             issues.append(
-                f"slide anchor {slide_anchors[-1]} exceeds Slidev slide count {slide_count}"
+                f"slide anchors {unique_slide_anchors} exceed Slidev slide count {slide_count}"
             )
 
     animations = []
@@ -303,7 +310,7 @@ def main() -> int:
             "mp4_exists": mp4.exists() and mp4.stat().st_size > 0,
             "lint": None,
         }
-        asset_is_issue = stage == "manim" or (stage == "qa" and args.strict)
+        asset_is_issue = stage == "manim" or args.strict
         if not item["scene_exists"]:
             (issues if asset_is_issue else warnings).append(f"missing scene for {name}")
         else:
@@ -354,6 +361,7 @@ def main() -> int:
         "research_detail": research_detail,
         "slide_anchors": slide_anchors,
         "slide_count": slide_count,
+        "slide_mapping": slide_mapping,
         "animation_anchors": sorted(set(anim_anchors)),
         "escaped_anchors": escaped,
         "animations": animations,
@@ -370,6 +378,11 @@ def main() -> int:
         print(f"Status:  {status}")
         print(f"Research: {'OK' if research_ok else 'MISSING'} ({research_detail})")
         print(f"Slides:  {slide_count} slide(s), anchors {slide_anchors or 'none'}")
+        if slide_count or slide_anchors:
+            print(
+                f"Mapping: {unique_slide_anchors} anchor(s), {slide_count} slide(s), "
+                f"buffer {slide_mapping['buffer']} (N >= M allowed)"
+            )
         print(f"Anims:   {sorted(set(anim_anchors)) or 'none'}")
         if build_info["ran"]:
             build_status = "PASS" if build_info["exit_code"] == 0 else "FAIL"

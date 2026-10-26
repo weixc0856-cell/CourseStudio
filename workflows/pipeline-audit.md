@@ -79,6 +79,13 @@
 - **版本锁定**：`new-episode.ps1` 使用 `uv add manim==0.22.0`。
 - **事务回滚**：`new-episode.ps1` 初始化失败时删除半成品课程目录。
 
+### v1.4 增量（退出码与负向回归）
+
+- **严格退出码**：`--strict` 或 `qa` 阶段的研究缺失/空文件直接进 `issues`，不再降级为 warning。
+- **资产硬失败**：`--strict` 下缺场景/MP4、ffprobe 不可用、真实时长超限都返回非零。
+- **双向映射**：输出 `Mapping: M anchor(s), N slide(s), buffer ...`；允许 `N >= M`，`M > N` FAIL。
+- **负向测试**：新增 `tools/test_check_episode_negative.py`，覆盖空研究、重复锚点、缺 MP4、>20s MP4、构建失败、映射缓冲/溢出，7/7 通过。
+
 ## 1. 名称归一化结果
 
 方法：扫描 `%USERPROFILE%\.claude\skills\*\SKILL.md` 的 `name:` 字段；对 ZIP 解包后比对文件；解析 `%USERPROFILE%\.claude.json` 的 `mcpServers`；用命令探测运行时。

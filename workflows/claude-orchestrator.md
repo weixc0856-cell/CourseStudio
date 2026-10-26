@@ -63,6 +63,8 @@ python D:\CourseStudio\tools\check-episode.py <slug> --mode <course|technical|ne
 - 最终 QA 加 `--strict`，要求无 `Issues`；警告逐条写入 `handoff.md`。
 - `course`/`technical` 的终检会实际运行 `slidev-run.ps1 -Mode build`；构建非 0 即 FAIL。
 - 终检还会用 `ffprobe` 校验真实 MP4 时长，并拒绝空研究文件、重复/跳号/乱序的 slide 锚点。
+- 终检输出 `Mapping: M anchor(s), N slide(s), buffer ...`；`M > N` 即 FAIL。
+- 检查器负向回归 `python tools/test_check_episode_negative.py` 必须 7/7 通过。
 - 没有实际运行检查，不得写 `PASS`。
 
 ## 5. 自检循环的上限

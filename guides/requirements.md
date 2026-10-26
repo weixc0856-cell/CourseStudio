@@ -30,6 +30,7 @@
 - 冲突保留双方证据、定义与适用范围。
 - `05-quality-report.md` 写明 `NOT_RUN` / `PARTIAL` / 未决项。
 - 空文件、只有标题没有内容的台账、无 `FACT`/`CLAIM` 的台账，均不能通过。
+- 终检（`qa`）或 `--strict` 下，研究文件缺失/为空直接写入 `issues` 并以非零码退出，不降级为 `warning`。
 
 ## 3. 讲稿与视觉锚点
 
@@ -45,10 +46,18 @@
 | Slide 编号 | 严格 `01, 02, 03...`；重复、跳号、乱序均 `FAIL` |
 | Animation 命名 | 小写 `snake_case`；一个名字对应一个场景 |
 | 禁止包裹 | 不得放在代码块（三反引号）、引用块（`>`）或 HTML 注释（`<!-- -->`）中 |
-| 与页面一致 | `[SLIDE]` 编号不得超过 `slides.md` 的实际页数 |
+| 与页面映射 | 幻灯片总数 `N`，独立锚点数 `M`；允许 `N >= M`（封面/目录/封底可无锚点），但必须输出映射报告；`M > N` 直接 FAIL |
 | 分块写作 | 按大纲模块 1–2 个/轮追加；不要一次写完再检查 |
 
 检查：`python D:\CourseStudio\tools\check-episode.py <slug> --mode <mode> --stage script`
+
+映射报告示例：
+
+```text
+Mapping: 8 anchor(s), 10 slide(s), buffer 2 (N >= M allowed)
+```
+
+`M > N` 时输出 `slide anchors M exceed Slidev slide count N` 并 FAIL。
 
 ## 4. Slidev 课件
 
@@ -92,7 +101,9 @@ python D:\CourseStudio\tools\check-links.py courses\<slug>
 
 - `Issues` 为空；中间阶段允许 `PARTIAL`，终检不放行缺失资源。
 - `[SLIDE]` 严格 1..N；研究文件非空；MP4 真实时长 ≤20 秒。
+- 映射满足 `M <= N`，并输出 `Mapping: ... buffer ...` 报告；`M > N` 直接 FAIL。
 - `course` / `technical` 会**实际运行** `slidev-run.ps1 -Mode build`；非 0 即 `FAIL`。
+- 检查器自身的负向回归必须通过：`python tools/test_check_episode_negative.py`（7 项）。
 - 浏览器逐页检查：16:9、导航、视频、控制台。
 - Manim 抽帧检查：开头、中间、结尾。
 - `handoff.md` 已更新；`Warnings` 逐条记录。
@@ -172,7 +183,8 @@ pnpm --dir D:\CourseStudio\tools\slidev-runtime store prune
 
 | 要求 | 强制工具 |
 | --- | --- |
-| 严格 slide 编号、防逃逸、非空研究、ffprobe、Slidev build | `tools/check-episode.py` |
+| 严格 slide 编号、防逃逸、页数映射、非空研究、ffprobe、Slidev build | `tools/check-episode.py` |
+| 检查器自身回归 | `tools/test_check_episode_negative.py` |
 | Manim API/时长/真实时长 | `check-episode.py` + `manim-isolation` Skill |
 | 渲染超时与失败日志 | `tools/render-manim.ps1` |
 | Manim 版本锁定、建集回滚 | `tools/new-episode.ps1` |
@@ -187,3 +199,4 @@ pnpm --dir D:\CourseStudio\tools\slidev-runtime store prune
 - `paper-search` 是 CLI + Skill，不是已注册 MCP。
 - 人工教学评审与学习者测试不在自动流程内。
 - 真实 Episode 尚未开跑；当前只有临时 fixture 验证。
+- GitHub Actions 仍是通用 Python 模板：flake8 会扫描 vendored `paper-search-mcp` 并报 `F821`，且无 pytest 测试；尚未替换为项目专用 CI。

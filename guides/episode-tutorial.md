@@ -229,12 +229,14 @@ python D:\CourseStudio\tools\check-links.py courses\course-attention
 
 - 锚点是否被代码块/引用/注释包裹；
 - `[SLIDE]` 是否严格 1..N，重复/跳号/乱序直接 FAIL；
+- 映射报告：`M anchor(s), N slide(s), buffer ...`；允许 `N >= M`，`M > N` FAIL；
 - Slidev 页数与锚点是否匹配；
 - 每个动画的 `.py` 与 `.mp4`；
 - Manim 禁用 API；声明时长 ≤20 秒；
 - 真实 MP4 用 `ffprobe` 读取的时长 ≤20 秒；读不到时长则终检 FAIL；
-- 研究包：`course`/`technical` 的 00–06 非空；`news`/`podcast` 的 source/claim 非空且含 `FACT`/`CLAIM`；
+- 研究包：`course`/`technical` 的 00–06 非空；`news`/`podcast` 的 source/claim 非空且含 `FACT`/`CLAIM`；`--strict` 或 `qa` 下缺失直接 FAIL；
 - `course`/`technical` 终检会实际运行 `slidev-run.ps1 -Mode build`；构建非 0 即 FAIL；
+- 检查器负向回归 `python tools/test_check_episode_negative.py` 7/7 通过；
 - `handoff.md` 是否存在。
 
 若 `Issues` 非空：只修相关文件并重跑；同一问题连续 3 次修不好就停下报告，不要放宽检查或删证据。`Warnings` 逐条写入 `handoff.md`。再把浏览器检查、抽帧结果写入 `qa/`。**G5**：`Issues` 为空，且 `course`/`technical` 的 Slidev build 实际通过；状态区分 `PASS_VERIFIED` / `PASS_STATIC` / `PARTIAL` / `NOT_RUN` / `FAIL`。
@@ -329,6 +331,8 @@ python D:\CourseStudio\tools\check-episode.py podcast-example --mode podcast --s
 | --- | --- |
 | `check-episode.py` 报锚点被包裹 | 把 `[SLIDE]`/`[ANIMATION]` 改成纯文本独立成行 |
 | `[SLIDE]` 重复/跳号/乱序 | 改成严格 `01, 02, 03...`，不要重复或跳号 |
+| 映射报 `M > N` | 讲稿锚点比幻灯片多；减少锚点或增加页面，`N >= M` 才允许 |
+| 负向测试失败 | 说明严格门禁被破坏；先修 `check-episode.py`，不要跳过测试 |
 | 研究文件是 0 字节 | 补内容；空文件不能算通过 |
 | news/podcast 缺 source/claim | 同时补 `source-register.md` 与 `claims-ledger.md`，台账加 `FACT`/`CLAIM` |
 | 动画被报禁用 API | 去掉 `ThreeDScene`/`Camera3D`/粒子等，改 2D |
@@ -360,6 +364,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\render
 # 检查（按阶段）
 python D:\CourseStudio\tools\check-episode.py <slug> --mode <course|technical|news|podcast> --stage <research|script|slides|manim>
 python D:\CourseStudio\tools\check-episode.py <slug> --mode <mode> --stage qa --strict
+python D:\CourseStudio\tools\test_check_episode_negative.py
 ```
 
 阶段顺序固定：**研究 → 讲稿 → Slidev → Manim → QA → OBS**。每个子步骤写 `handoff.md`；只在 C1/C2/C4/C5/C6/C7 检查点 `/clear`，不是每步都清。
