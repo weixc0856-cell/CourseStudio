@@ -1,0 +1,342 @@
+{
+  "contract_version": "2.0.0",
+  "episode_id": "zz-contract-bad-version",
+  "mode": "course",
+  "title": "Contract Smoke Fixture",
+  "created_at": "2026-10-26T00:00:00Z",
+  "updated_at": "2026-10-26T00:00:20Z",
+  "toolchain": {
+    "python": "3.12.10",
+    "node": "24.14.1",
+    "pnpm": "10.34.1",
+    "ffmpeg": "8.1",
+    "chrome": "fixture",
+    "reveal": "6.0.2",
+    "motion": "3.17.2"
+  },
+  "artifacts": {
+    "research": "research/claims.jsonl",
+    "sources": "research/sources.json",
+    "script": "script.md",
+    "segments": "segments.json",
+    "deck": "slides/index.html",
+    "recording": "05_recording/manifest.json",
+    "acceptance": "acceptance.json",
+    "qa_runs": [
+      "qa/qa.static.json",
+      "qa/qa.runtime.json"
+    ]
+  },
+  "stages": {
+    "intake": {
+      "status": {
+        "STRUCTURAL": "PASS",
+        "RUNTIME": "NOT_APPLICABLE",
+        "HUMAN": "ACCEPTED",
+        "RECORDING": "NOT_APPLICABLE",
+        "DELIVERY": "NOT_READY"
+      },
+      "inputs": [],
+      "outputs": [
+        {
+          "path": "research/sources.json",
+          "sha256": "7df6b9c2be02157aeff85c80218a2971b8a8841c0d176f32189605a5e4fe8bd6"
+        }
+      ],
+      "updated_at": "2026-10-26T00:00:00Z"
+    },
+    "research": {
+      "status": {
+        "STRUCTURAL": "PASS",
+        "RUNTIME": "NOT_APPLICABLE",
+        "HUMAN": "ACCEPTED",
+        "RECORDING": "NOT_APPLICABLE",
+        "DELIVERY": "NOT_READY"
+      },
+      "inputs": [
+        {
+          "path": "research/sources.json",
+          "sha256": "7df6b9c2be02157aeff85c80218a2971b8a8841c0d176f32189605a5e4fe8bd6"
+        }
+      ],
+      "outputs": [
+        {
+          "path": "research/claims.jsonl",
+          "sha256": "81736214145cd69b49861e85fb49d8e0d7283bc5dfc29ae78639747e39e47b3c"
+        }
+      ],
+      "updated_at": "2026-10-26T00:00:02Z"
+    },
+    "design": {
+      "status": {
+        "STRUCTURAL": "PASS",
+        "RUNTIME": "NOT_APPLICABLE",
+        "HUMAN": "ACCEPTED",
+        "RECORDING": "NOT_APPLICABLE",
+        "DELIVERY": "NOT_READY"
+      },
+      "inputs": [
+        {
+          "path": "research/claims.jsonl",
+          "sha256": "81736214145cd69b49861e85fb49d8e0d7283bc5dfc29ae78639747e39e47b3c"
+        }
+      ],
+      "outputs": [
+        {
+          "path": "design.md",
+          "sha256": "2bfc46bad847e597680c813977bcb732835f8cebdaf567791a8f0f972cd0f0a7"
+        }
+      ],
+      "updated_at": "2026-10-26T00:00:04Z"
+    },
+    "script": {
+      "status": {
+        "STRUCTURAL": "PASS",
+        "RUNTIME": "NOT_APPLICABLE",
+        "HUMAN": "ACCEPTED",
+        "RECORDING": "NOT_APPLICABLE",
+        "DELIVERY": "NOT_READY"
+      },
+      "inputs": [
+        {
+          "path": "design.md",
+          "sha256": "2bfc46bad847e597680c813977bcb732835f8cebdaf567791a8f0f972cd0f0a7"
+        },
+        {
+          "path": "research/claims.jsonl",
+          "sha256": "81736214145cd69b49861e85fb49d8e0d7283bc5dfc29ae78639747e39e47b3c"
+        }
+      ],
+      "outputs": [
+        {
+          "path": "script.md",
+          "sha256": "befe91c03bfecaaafa63c84bacbeaf3a571b453fe9625d8369997b80de0945ba"
+        },
+        {
+          "path": "segments.json",
+          "sha256": "cb2b7ca2ef8995275e2b54f0821fd7f590f785157f661e5bf27c4f1b3e4acd48"
+        }
+      ],
+      "updated_at": "2026-10-26T00:00:06Z"
+    },
+    "visual": {
+      "status": {
+        "STRUCTURAL": "PASS",
+        "RUNTIME": "PASS",
+        "HUMAN": "ACCEPTED",
+        "RECORDING": "NOT_APPLICABLE",
+        "DELIVERY": "NOT_READY"
+      },
+      "inputs": [
+        {
+          "path": "script.md",
+          "sha256": "befe91c03bfecaaafa63c84bacbeaf3a571b453fe9625d8369997b80de0945ba"
+        },
+        {
+          "path": "segments.json",
+          "sha256": "cb2b7ca2ef8995275e2b54f0821fd7f590f785157f661e5bf27c4f1b3e4acd48"
+        }
+      ],
+      "outputs": [
+        {
+          "path": "slides/index.html",
+          "sha256": "1aaf158bc1ec2968a3bec221d8aa18ca9a35b046b313542d338155893068be94"
+        },
+        {
+          "path": "motion/scene.tsx",
+          "sha256": "ac38358639a253c7e7299765fbae568583c5c4caf71da89cbf53012f6f15891a"
+        }
+      ],
+      "updated_at": "2026-10-26T00:00:12Z"
+    },
+    "package": {
+      "status": {
+        "STRUCTURAL": "PASS",
+        "RUNTIME": "NOT_APPLICABLE",
+        "HUMAN": "NOT_REQUIRED",
+        "RECORDING": "NOT_APPLICABLE",
+        "DELIVERY": "NOT_READY"
+      },
+      "inputs": [
+        {
+          "path": "script.md",
+          "sha256": "befe91c03bfecaaafa63c84bacbeaf3a571b453fe9625d8369997b80de0945ba"
+        },
+        {
+          "path": "segments.json",
+          "sha256": "cb2b7ca2ef8995275e2b54f0821fd7f590f785157f661e5bf27c4f1b3e4acd48"
+        }
+      ],
+      "outputs": [
+        {
+          "path": "05_recording/manifest.json",
+          "sha256": "3296ea4483dcdfdc5fc8241dddc9d01296d1a9f9ec5488a5f4ff7cbb19bf0a31"
+        },
+        {
+          "path": "05_recording/cues/seg-001.md",
+          "sha256": "7db8f118ccbdc2aaec4f601d02856c8fd00b5f92da6b3c18e00b2985a792d3bb"
+        }
+      ],
+      "updated_at": "2026-10-26T00:00:13Z"
+    },
+    "qa.static": {
+      "status": {
+        "STRUCTURAL": "PASS",
+        "RUNTIME": "NOT_APPLICABLE",
+        "HUMAN": "NOT_REQUIRED",
+        "RECORDING": "NOT_APPLICABLE",
+        "DELIVERY": "NOT_READY"
+      },
+      "inputs": [
+        {
+          "path": "research/claims.jsonl",
+          "sha256": "81736214145cd69b49861e85fb49d8e0d7283bc5dfc29ae78639747e39e47b3c"
+        },
+        {
+          "path": "segments.json",
+          "sha256": "cb2b7ca2ef8995275e2b54f0821fd7f590f785157f661e5bf27c4f1b3e4acd48"
+        },
+        {
+          "path": "05_recording/manifest.json",
+          "sha256": "3296ea4483dcdfdc5fc8241dddc9d01296d1a9f9ec5488a5f4ff7cbb19bf0a31"
+        },
+        {
+          "path": "script.md",
+          "sha256": "befe91c03bfecaaafa63c84bacbeaf3a571b453fe9625d8369997b80de0945ba"
+        },
+        {
+          "path": "slides/index.html",
+          "sha256": "1aaf158bc1ec2968a3bec221d8aa18ca9a35b046b313542d338155893068be94"
+        }
+      ],
+      "outputs": [
+        {
+          "path": "qa/qa.static.json",
+          "sha256": "64fab2e81a97d66e4ae0bb9c8e183139a0b2dbb1fd895f0e2be74762810d332f"
+        }
+      ],
+      "updated_at": "2026-10-26T00:00:05Z"
+    },
+    "qa.runtime": {
+      "status": {
+        "STRUCTURAL": "NOT_APPLICABLE",
+        "RUNTIME": "PASS",
+        "HUMAN": "NOT_REQUIRED",
+        "RECORDING": "NOT_APPLICABLE",
+        "DELIVERY": "NOT_READY"
+      },
+      "inputs": [
+        {
+          "path": "segments.json",
+          "sha256": "cb2b7ca2ef8995275e2b54f0821fd7f590f785157f661e5bf27c4f1b3e4acd48"
+        },
+        {
+          "path": "motion/scene.tsx",
+          "sha256": "ac38358639a253c7e7299765fbae568583c5c4caf71da89cbf53012f6f15891a"
+        },
+        {
+          "path": "slides/index.html",
+          "sha256": "1aaf158bc1ec2968a3bec221d8aa18ca9a35b046b313542d338155893068be94"
+        }
+      ],
+      "outputs": [
+        {
+          "path": "qa/qa.runtime.json",
+          "sha256": "f9164130e5f54b172ba033157a423a48b400b72e14d571cdb058fd033f431432"
+        }
+      ],
+      "updated_at": "2026-10-26T00:00:20Z"
+    },
+    "human.accept": {
+      "status": {
+        "STRUCTURAL": "NOT_APPLICABLE",
+        "RUNTIME": "NOT_APPLICABLE",
+        "HUMAN": "ACCEPTED",
+        "RECORDING": "NOT_APPLICABLE",
+        "DELIVERY": "NOT_READY"
+      },
+      "inputs": [
+        {
+          "path": "qa/qa.static.json",
+          "sha256": "64fab2e81a97d66e4ae0bb9c8e183139a0b2dbb1fd895f0e2be74762810d332f"
+        },
+        {
+          "path": "qa/qa.runtime.json",
+          "sha256": "f9164130e5f54b172ba033157a423a48b400b72e14d571cdb058fd033f431432"
+        }
+      ],
+      "outputs": [
+        {
+          "path": "acceptance.json",
+          "sha256": "b8bd7af7fcaee480b15bdd784e6181b4ed6f41e2678804a0dc8fd119951fe32e"
+        }
+      ],
+      "updated_at": "2026-10-26T00:00:21Z"
+    },
+    "record": {
+      "status": {
+        "STRUCTURAL": "NOT_APPLICABLE",
+        "RUNTIME": "NOT_APPLICABLE",
+        "HUMAN": "ACCEPTED",
+        "RECORDING": "PASS",
+        "DELIVERY": "NOT_READY"
+      },
+      "inputs": [
+        {
+          "path": "05_recording/manifest.json",
+          "sha256": "3296ea4483dcdfdc5fc8241dddc9d01296d1a9f9ec5488a5f4ff7cbb19bf0a31"
+        },
+        {
+          "path": "acceptance.json",
+          "sha256": "b8bd7af7fcaee480b15bdd784e6181b4ed6f41e2678804a0dc8fd119951fe32e"
+        }
+      ],
+      "outputs": [
+        {
+          "path": "05_recording/manifest.json",
+          "sha256": "3296ea4483dcdfdc5fc8241dddc9d01296d1a9f9ec5488a5f4ff7cbb19bf0a31"
+        }
+      ],
+      "updated_at": "2026-10-26T00:00:22Z"
+    },
+    "deliver": {
+      "status": {
+        "STRUCTURAL": "NOT_APPLICABLE",
+        "RUNTIME": "NOT_APPLICABLE",
+        "HUMAN": "NOT_REQUIRED",
+        "RECORDING": "NOT_APPLICABLE",
+        "DELIVERY": "READY"
+      },
+      "inputs": [
+        {
+          "path": "qa/qa.static.json",
+          "sha256": "64fab2e81a97d66e4ae0bb9c8e183139a0b2dbb1fd895f0e2be74762810d332f"
+        },
+        {
+          "path": "qa/qa.runtime.json",
+          "sha256": "f9164130e5f54b172ba033157a423a48b400b72e14d571cdb058fd033f431432"
+        },
+        {
+          "path": "acceptance.json",
+          "sha256": "b8bd7af7fcaee480b15bdd784e6181b4ed6f41e2678804a0dc8fd119951fe32e"
+        },
+        {
+          "path": "05_recording/manifest.json",
+          "sha256": "3296ea4483dcdfdc5fc8241dddc9d01296d1a9f9ec5488a5f4ff7cbb19bf0a31"
+        }
+      ],
+      "outputs": [],
+      "updated_at": "2026-10-26T00:00:23Z"
+    }
+  },
+  "delivery": {
+    "status": "READY",
+    "blocking_reasons": []
+  },
+  "approvals": [],
+  "extensions": {
+    "fixture": true,
+    "synthetic": "This fixture is not evidence of a real course run."
+  },
+  "notes": "Synthetic contract fixture; every PASS here is a fixture input, not a real verification."
+}

@@ -576,6 +576,214 @@ def check_recording_package(episode: Path, motion_entries: list[dict]) -> tuple[
     return info, problems, warnings
 
 
+def _load_evidence(path: Path) -> tuple[dict | None, str | None]:
+    """Load a JSON evidence file. Missing file is not an error; malformed is."""
+    if not path.is_file():
+        return None, None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return None, f"invalid evidence file {path.name}: {exc}"
+    if not isinstance(data, dict):
+        return None, f"evidence file {path.name} must contain a JSON object"
+    return data, None
+
+
+def _runtime_dimension(
+    evidence: dict | None,
+    error: str | None,
+    deck_kind: str,
+    motion_entries: list[dict],
+    build_info: dict,
+) -> tuple[str, list[str]]:
+    """Map runtime evidence to PASS/FAIL/NOT_RUN. Never infer PASS from static files."""
+    if error:
+        return "FAIL", [error]
+    if evidence is None:
+        if deck_kind == "slidev" and build_info.get("ran"):
+            if build_info.get("exit_code") == 0:
+                return "PASS", []
+            return "FAIL", [f"Slidev build failed (exit {build_info.get('exit_code')})"]
+        return "NOT_RUN", ["missing runtime evidence (expected qa/runtime.json or a real build)"]
+
+    status = evidence.get("status")
+    if status == "FAIL":
+        return "FAIL", ["runtime evidence status is FAIL"]
+    if status == "BLOCKED":
+        return "NOT_RUN", ["runtime evidence status is BLOCKED"]
+    if status != "PASS":
+        return "NOT_RUN", [f"runtime evidence status is {status!r}"]
+
+    checks = evidence.get("checks")
+    if not isinstance(checks, list) or not checks:
+        return "NOT_RUN", ["runtime evidence has no checks"]
+
+    for entry in motion_entries:
+        name = entry.get("name")
+        matching = [
+            check for check in checks
+            if isinstance(check, dict)
+            and (
+                (entry.get("segment_id") is not None and check.get("segment_id") == entry.get("segment_id"))
+                or check.get("name") == name
+            )
+        ]
+        if not matching:
+            return "NOT_RUN", [f"runtime evidence missing motion probe for {name}"]
+        probe = matching[0].get("probe_seconds")
+        if isinstance(probe, bool) or not isinstance(probe, (int, float)):
+            return "NOT_RUN", [f"runtime evidence motion probe for {name} has no numeric probe_seconds"]
+        declared = entry.get("duration_seconds")
+        if isinstance(declared, (int, float)) and abs(float(probe) - float(declared)) > 2.0:
+            return "FAIL", [
+                f"runtime probe {float(probe):.2f}s differs from declared {float(declared):.2f}s by more than 2s"
+            ]
+
+    if deck_kind == "reveal":
+        if not any(
+            isinstance(check, dict) and check.get("kind") == "browser" and check.get("status") == "PASS"
+            for check in checks
+        ):
+            return "NOT_RUN", ["runtime evidence missing PASS browser check"]
+    if deck_kind == "slidev":
+        build_ok = any(
+            isinstance(check, dict) and check.get("kind") == "build" and check.get("status") == "PASS"
+            for check in checks
+        )
+        if not build_ok and not (build_info.get("ran") and build_info.get("exit_code") == 0):
+            return "NOT_RUN", ["runtime evidence missing PASS Slidev build check"]
+    return "PASS", []
+
+
+def _content_dimension(evidence: dict | None, error: str | None) -> tuple[str, list[str]]:
+    """Map AI content/visual review evidence to PASS/FAIL/NEEDS_REVIEW/NOT_RUN."""
+    if error:
+        return "FAIL", [error]
+    if evidence is None:
+        return "NOT_RUN", ["missing content-quality evidence (expected qa/content-quality.json)"]
+    status = evidence.get("status")
+    if status == "FAIL":
+        return "FAIL", ["content-quality evidence status is FAIL"]
+    if status == "NEEDS_REVIEW":
+        return "NEEDS_REVIEW", ["content-quality evidence requires automatic rework or owner decision"]
+    if status == "BLOCKED":
+        return "NOT_RUN", ["content-quality evidence status is BLOCKED"]
+    if status != "PASS":
+        return "NOT_RUN", [f"content-quality evidence status is {status!r}"]
+    checks = evidence.get("checks")
+    if not isinstance(checks, list) or not checks:
+        return "NOT_RUN", ["content-quality evidence has no checks"]
+    statuses = [check.get("status") for check in checks if isinstance(check, dict)]
+    if "FAIL" in statuses:
+        return "FAIL", ["content-quality evidence contains a FAIL check"]
+    if "NEEDS_REVIEW" in statuses:
+        return "NEEDS_REVIEW", ["content-quality evidence contains a NEEDS_REVIEW check"]
+    if "BLOCKED" in statuses or "NOT_RUN" in statuses:
+        return "NOT_RUN", ["content-quality evidence contains a BLOCKED/NOT_RUN check"]
+    return "PASS", []
+
+
+def _recording_dimension(
+    scope: str,
+    evidence: dict | None,
+    error: str | None,
+) -> tuple[str, list[str]]:
+    if scope != "video":
+        return "NOT_APPLICABLE", []
+    if error:
+        return "FAIL", [error]
+    if evidence is None:
+        return "NOT_RUN", ["missing recording evidence (expected qa/recording.json for video scope)"]
+    status = evidence.get("status")
+    if status == "PASS":
+        return "PASS", []
+    if status == "FAIL":
+        return "FAIL", ["recording evidence status is FAIL"]
+    return "NOT_RUN", [f"recording evidence status is {status!r}"]
+
+
+def contract_status(
+    stage: str,
+    mode: str,
+    issues: list[str],
+    warnings: list[str],
+    deck_kind: str,
+    build_info: dict,
+    motion_entries: list[dict],
+    delivery_scope: str,
+    runtime_ev: dict | None,
+    runtime_err: str | None,
+    content_ev: dict | None,
+    content_err: str | None,
+    recording_ev: dict | None,
+    recording_err: str | None,
+) -> dict:
+    """Compute five dimensions and an exit code. Required evidence never defaults to PASS."""
+    structural = "FAIL" if issues or "missing handoff.md" in warnings else "PASS"
+    runtime = "NOT_APPLICABLE"
+    content = "NOT_APPLICABLE"
+    recording = "NOT_APPLICABLE"
+    delivery = "NOT_READY"
+    reasons: list[str] = []
+
+    if stage == "qa":
+        needs_runtime = mode in {"course", "technical"} or (
+            mode == "news" and (deck_kind != "none" or bool(motion_entries))
+        )
+        if needs_runtime:
+            runtime, runtime_reasons = _runtime_dimension(
+                runtime_ev, runtime_err, deck_kind, motion_entries, build_info
+            )
+            reasons.extend(runtime_reasons)
+
+        content, content_reasons = _content_dimension(content_ev, content_err)
+        reasons.extend(content_reasons)
+
+        recording, recording_reasons = _recording_dimension(
+            delivery_scope, recording_ev, recording_err
+        )
+        reasons.extend(recording_reasons)
+
+        required = [structural, content]
+        if needs_runtime:
+            required.append(runtime)
+        if delivery_scope == "video":
+            required.append(recording)
+
+        if "FAIL" in required:
+            status, exit_code = "FAIL", 1
+        elif "NOT_RUN" in required:
+            status, exit_code = "BLOCKED", 2
+        elif "NEEDS_REVIEW" in required:
+            status, exit_code = "NEEDS_REVIEW", 2
+        else:
+            status, exit_code = "READY", 0
+            delivery = "READY"
+    else:
+        if structural == "FAIL":
+            status, exit_code = "FAIL", 1
+        else:
+            status, exit_code = "STRUCTURAL_PASS", 0
+        if "missing handoff.md" in warnings:
+            reasons.append("missing handoff.md is a required structural deliverable")
+
+    if issues:
+        reasons.extend(issues)
+    return {
+        "status": status,
+        "exit_code": exit_code,
+        "delivery": delivery,
+        "dimensions": {
+            "STRUCTURAL": structural,
+            "RUNTIME": runtime,
+            "CONTENT_QUALITY": content,
+            "RECORDING": recording,
+            "DELIVERY": delivery,
+        },
+        "reasons": reasons,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("episode", help="Episode slug under courses/")
@@ -588,6 +796,16 @@ def main() -> int:
         help="Only enforce what this stage is expected to have produced.",
     )
     parser.add_argument("--strict", action="store_true", help="Final QA: missing scenes/MP4s fail and Slidev build must pass")
+    parser.add_argument("--status-mode", choices=["legacy", "contract"], default="contract",
+                        help="legacy keeps PASS_VERIFIED; contract uses five dimensions and BLOCKED/READY semantics")
+    parser.add_argument("--runtime-evidence", default=None,
+                        help="Path to runtime QA evidence JSON (default: <episode>/qa/runtime.json)")
+    parser.add_argument("--content-evidence", default=None,
+                        help="Path to content-quality evidence JSON (default: <episode>/qa/content-quality.json)")
+    parser.add_argument("--recording-evidence", default=None,
+                        help="Path to recording evidence JSON (default: <episode>/qa/recording.json)")
+    parser.add_argument("--delivery-scope", choices=["package", "video"], default="package",
+                        help="package: final video is not required; video: recording evidence is required")
     parser.add_argument("--json", action="store_true", help="Print machine-readable JSON")
     args = parser.parse_args()
 
@@ -612,9 +830,21 @@ def main() -> int:
     if stage == "research":
         if not handoff:
             warnings.append("missing handoff.md")
-        status = "FAIL" if issues else ("PASS_VERIFIED" if not warnings else "PARTIAL")
+        contract = None
+        if args.status_mode == "contract":
+            contract = contract_status(
+                stage, args.mode, issues, warnings, "none", {}, [], args.delivery_scope,
+                None, None, None, None, None, None,
+            )
+            status = contract["status"]
+            exit_code = contract["exit_code"]
+        else:
+            status = "FAIL" if issues else ("PASS_VERIFIED" if not warnings else "PARTIAL")
+            exit_code = 1 if issues else 0
         result = {
             "episode": args.episode, "mode": args.mode, "stage": stage, "status": status,
+            "status_mode": args.status_mode,
+            "dimensions": contract["dimensions"] if contract else None,
             "research_ok": research_ok, "research_detail": research_detail,
             "handoff": handoff, "issues": issues, "warnings": warnings,
         }
@@ -623,12 +853,14 @@ def main() -> int:
         else:
             print(f"Episode: {args.episode}  mode={args.mode}  stage={stage}")
             print(f"Status:  {status}")
+            if contract:
+                print("Dimensions: " + " ".join(f"{k}={v}" for k, v in contract["dimensions"].items()))
             print(f"Research: {'OK' if research_ok else 'MISSING'} ({research_detail})")
             for i in issues:
                 print(f"  - ISSUE: {i}")
             for w in warnings:
                 print(f"  - WARN:  {w}")
-        return 1 if issues else 0
+        return exit_code
 
     script_text = ""
     if not script_path.exists():
@@ -738,6 +970,10 @@ def main() -> int:
             if entry["engine"] == "motion":
                 motion_entries.append(entry)
                 item, problems, item_warnings = check_motion_segment(episode, entry)
+                if stage == "motion":
+                    cue_problems = [problem for problem in problems if "missing cue" in problem]
+                    problems = [problem for problem in problems if "missing cue" not in problem]
+                    warnings.extend(cue_problems)
                 (issues if motion_is_issue else warnings).extend(problems)
                 warnings.extend(item_warnings)
                 animations.append(item)
@@ -827,12 +1063,32 @@ def main() -> int:
     elif stage == "qa" and args.strict and args.mode in {"course", "technical"} and deck_kind == "reveal":
         build_info["skipped"] = "Reveal deck: build check deferred to Phase 4"
 
-    status = "FAIL" if issues else ("PASS_VERIFIED" if not warnings else "PARTIAL")
+    def _evidence_path(explicit: str | None, default_name: str) -> Path:
+        return Path(explicit) if explicit else episode / "qa" / default_name
+
+    runtime_ev, runtime_err = _load_evidence(_evidence_path(args.runtime_evidence, "runtime.json"))
+    content_ev, content_err = _load_evidence(_evidence_path(args.content_evidence, "content-quality.json"))
+    recording_ev, recording_err = _load_evidence(_evidence_path(args.recording_evidence, "recording.json"))
+
+    contract = None
+    if args.status_mode == "contract":
+        contract = contract_status(
+            stage, args.mode, issues, warnings, deck_kind, build_info,
+            motion_entries, args.delivery_scope,
+            runtime_ev, runtime_err, content_ev, content_err, recording_ev, recording_err,
+        )
+        status = contract["status"]
+    else:
+        status = "FAIL" if issues else ("PASS_VERIFIED" if not warnings else "PARTIAL")
     result = {
         "episode": args.episode,
         "mode": args.mode,
         "stage": stage,
         "status": status,
+        "status_mode": args.status_mode,
+        "dimensions": contract["dimensions"] if contract else None,
+        "delivery_scope": args.delivery_scope,
+        "contract": contract,
         "research_ok": research_ok,
         "research_detail": research_detail,
         "deck_kind": deck_kind,
@@ -868,6 +1124,11 @@ def main() -> int:
     else:
         print(f"Episode: {args.episode}  mode={args.mode}  stage={stage}")
         print(f"Status:  {status}")
+        if contract:
+            print("Dimensions: " + " ".join(f"{key}={value}" for key, value in contract["dimensions"].items()))
+            for reason in contract["reasons"]:
+                if reason not in issues and reason not in warnings:
+                    print(f"  - CONTRACT: {reason}")
         print(f"Research: {'OK' if research_ok else 'MISSING'} ({research_detail})")
         deck_label = deck_kind if deck_kind != "none" else "none"
         print(f"Slides:  {slide_count} slide(s) [{deck_label}]")
@@ -929,6 +1190,13 @@ def main() -> int:
                 f"recordings_dir={'OK' if recording_info['recordings_dir_exists'] else 'optional'}, "
                 f"recordings={recording_info['recordings']})"
             )
+        if contract:
+            print(
+                "Evidence: runtime="
+                f"{(runtime_ev or {}).get('status', 'MISSING')} "
+                f"content={(content_ev or {}).get('status', 'MISSING')} "
+                f"recording={(recording_ev or {}).get('status', 'MISSING') if args.delivery_scope == 'video' else 'NOT_APPLICABLE'}"
+            )
         if escaped:
             print("Escaped anchors:")
             for a in escaped:
@@ -942,6 +1210,8 @@ def main() -> int:
             for w in warnings:
                 print(f"  - {w}")
 
+    if contract:
+        return contract["exit_code"]
     return 1 if issues else 0
 
 

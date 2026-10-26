@@ -1,0 +1,16 @@
+{
+  "contract_version": "1.0.0",
+  "episode_id": "zz-contract-smoke",
+  "decision": "PASS",
+  "reviewer": "fixture-reviewer",
+  "reviewed_at": "2026-10-26T00:00:00Z",
+  "scope": [
+    "facts",
+    "teaching",
+    "visual",
+    "narration",
+    "recording"
+  ],
+  "artifact_hashes": {},
+  "notes": "Synthetic AI content review record; not a human sign-off."
+}

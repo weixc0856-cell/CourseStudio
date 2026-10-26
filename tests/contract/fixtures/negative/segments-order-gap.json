@@ -1,0 +1,49 @@
+{
+  "contract_version": "1.0.0",
+  "episode_id": "zz-contract-smoke",
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 60
+  },
+  "segments": [
+    {
+      "segment_id": "SEG-001",
+      "name": "seg_one",
+      "order": 1,
+      "engine": "motion",
+      "duration_seconds": 60,
+      "declared_seconds": 60,
+      "actual_seconds": 60.0,
+      "actual_source": "probe",
+      "script_anchor": "[ANIMATION: seg_one]",
+      "slide_anchors": [
+        "SLD-02"
+      ],
+      "scene": "motion/scene.tsx",
+      "project": "motion/project.ts",
+      "cue": "05_recording/cues/seg-001.md",
+      "record_status": "VERIFIED",
+      "notes": "Synthetic fixture duration; not a real Motion probe."
+    },
+    {
+      "segment_id": "SEG-003",
+      "name": "seg_three",
+      "order": 3,
+      "engine": "motion",
+      "duration_seconds": 60,
+      "declared_seconds": 60,
+      "actual_seconds": 60.0,
+      "actual_source": "probe",
+      "script_anchor": "[ANIMATION: seg_one]",
+      "slide_anchors": [
+        "SLD-02"
+      ],
+      "scene": "motion/scene.tsx",
+      "project": "motion/project.ts",
+      "cue": "05_recording/cues/seg-001.md",
+      "record_status": "VERIFIED",
+      "notes": "Synthetic fixture duration; not a real Motion probe."
+    }
+  ]
+}

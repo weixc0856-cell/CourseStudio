@@ -1,0 +1,38 @@
+{
+  "contract_version": "1.0.0",
+  "episode_id": "zz-contract-smoke",
+  "generated_at": "2026-10-26T00:00:00Z",
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 60
+  },
+  "segments": [
+    {
+      "order": 1,
+      "segment_id": "SEG-001",
+      "name": "seg_one",
+      "engine": "motion",
+      "url": "http://localhost:9100/record.html?segment=seg_one",
+      "declared_seconds": 60,
+      "cue": "05_recording/cues/seg-001.md",
+      "scene": "motion/scene.tsx",
+      "project": "motion/project.ts",
+      "record_status": "VERIFIED",
+      "recording": {
+        "path": "05_recording/recordings/seg-001.mp4",
+        "sha256": "af4d740d766b2c5725fa37d752b4231448b52aca7cda016fb13f9b2be6703f3c",
+        "bytes": 1320
+      },
+      "recorded_at": "2026-10-26T00:00:00Z",
+      "operator": "fixture-operator",
+      "human_acceptance": {
+        "decision": "ACCEPTED",
+        "reviewer": "fixture-reviewer",
+        "reviewed_at": "2026-10-26T00:00:00Z",
+        "notes": "Synthetic fixture."
+      },
+      "notes": "Synthetic recording task; no real file exists."
+    }
+  ]
+}

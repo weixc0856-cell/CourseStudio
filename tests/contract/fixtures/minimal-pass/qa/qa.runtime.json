@@ -1,0 +1,144 @@
+{
+  "contract_version": "1.0.0",
+  "run_id": "RUN-20261026T000000Z-bbbbbbbb",
+  "episode_id": "zz-contract-smoke",
+  "stage": "qa.runtime",
+  "layer": "L2",
+  "started_at": "2026-10-26T00:00:06Z",
+  "ended_at": "2026-10-26T00:00:20Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "check_id": "QA-RUNTIME-TYPECHECK",
+      "stage": "qa.runtime",
+      "layer": "L2",
+      "scope": "Motion scene/project typecheck",
+      "status": "PASS",
+      "severity": "BLOCKER",
+      "command": "pnpm --dir motion typecheck",
+      "exit_code": 0,
+      "log_path": "qa/runtime/typecheck.log",
+      "tool_versions": {
+        "node": "24.14.1",
+        "pnpm": "10.34.1",
+        "typescript": "5.9.3"
+      },
+      "inputs": [
+        {
+          "path": "motion/scene.tsx",
+          "sha256": "ac38358639a253c7e7299765fbae568583c5c4caf71da89cbf53012f6f15891a"
+        },
+        {
+          "path": "motion/project.ts",
+          "sha256": "1118279fe7760d9833eb8fdd357c1d6b317ba7b39efe4828d8bbee32a4336718"
+        }
+      ],
+      "outputs": [],
+      "runtime": {
+        "typecheck": "PASS"
+      },
+      "started_at": "2026-10-26T00:00:06Z",
+      "ended_at": "2026-10-26T00:00:10Z"
+    },
+    {
+      "check_id": "QA-RUNTIME-PROBE",
+      "stage": "qa.runtime",
+      "layer": "L2",
+      "scope": "Motion record.html?probe=1 duration",
+      "status": "PASS",
+      "severity": "BLOCKER",
+      "command": "probe record.html?segment=seg_one&probe=1",
+      "exit_code": 0,
+      "log_path": "qa/runtime/probe.json",
+      "tool_versions": {
+        "chrome": "fixture"
+      },
+      "inputs": [
+        {
+          "path": "segments.json",
+          "sha256": "cb2b7ca2ef8995275e2b54f0821fd7f590f785157f661e5bf27c4f1b3e4acd48"
+        }
+      ],
+      "outputs": [],
+      "runtime": {
+        "probe_seconds": 60.0,
+        "probe_frames": 3600,
+        "probe_fps": 60
+      },
+      "started_at": "2026-10-26T00:00:10Z",
+      "ended_at": "2026-10-26T00:00:14Z"
+    },
+    {
+      "check_id": "QA-RUNTIME-BROWSER",
+      "stage": "qa.runtime",
+      "layer": "L2",
+      "scope": "Reveal two-page load and screenshots",
+      "status": "PASS",
+      "severity": "ERROR",
+      "command": "reveal-run + chrome load",
+      "exit_code": 0,
+      "log_path": "qa/runtime/browser.log",
+      "tool_versions": {
+        "chrome": "fixture"
+      },
+      "inputs": [
+        {
+          "path": "slides/index.html",
+          "sha256": "6b6ce2558566452f023733705a7dd4263be57a8225443d0da5dc2949e13bdaf7"
+        }
+      ],
+      "outputs": [],
+      "runtime": {
+        "browser_load": "PASS",
+        "screenshots": [
+          "qa/runtime/browser/slide-01.png",
+          "qa/runtime/browser/slide-02.png"
+        ]
+      },
+      "started_at": "2026-10-26T00:00:14Z",
+      "ended_at": "2026-10-26T00:00:18Z"
+    },
+    {
+      "check_id": "QA-RUNTIME-BUILD",
+      "stage": "qa.runtime",
+      "layer": "L2",
+      "scope": "static deck build step",
+      "status": "NOT_APPLICABLE",
+      "severity": "INFO",
+      "command": "none",
+      "exit_code": null,
+      "log_path": null,
+      "tool_versions": {
+        "reveal": "6.0.2"
+      },
+      "inputs": [],
+      "outputs": [],
+      "runtime": {
+        "build": "NOT_APPLICABLE"
+      },
+      "started_at": "2026-10-26T00:00:18Z",
+      "ended_at": "2026-10-26T00:00:20Z",
+      "notes": "Reveal is a static deck; no build step in this fixture."
+    }
+  ],
+  "summary": {
+    "counts": {
+      "PASS": 3,
+      "FAIL": 0,
+      "BLOCKED": 0,
+      "NOT_RUN": 0,
+      "NOT_APPLICABLE": 1
+    },
+    "blocking_failures": [],
+    "warnings": [],
+    "skipped": [
+      "build: Reveal has no build step"
+    ]
+  },
+  "environment": {
+    "node": "24.14.1",
+    "pnpm": "10.34.1",
+    "chrome": "fixture"
+  },
+  "notes": "Synthetic fixture runtime QA run; not a real execution."
+}

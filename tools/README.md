@@ -17,8 +17,12 @@
 | `reveal-runtime/` | 共享 Reveal.js 6.0.2 运行时（`pnpm install`，不构建、不全局） | 本目录 `node_modules` |
 | `reveal-run.ps1` | 同步 reveal dist 到 `03_slides/.vendor/reveal/`（gitignore），用 `python -m http.server` 服务 `03_slides` 并打印 URL | 系统 Python，不引入 Node 服务器 |
 | `render-manim.ps1` | 用课程 `.venv` 渲染单个场景并复制 MP4 到 `03_slides/public/`；默认 180s 超时，超时杀进程树 | 课程 `.venv` |
-| `check-episode.py` | 检查锚点、页数映射、研究包；按 `segments.json` 分派 motion/manim，校验 45–90 秒、scene/project/cue、节奏标注、录制包结构；Reveal 检查 data-slide 1..N 与本地资源，strict 跳过 Slidev build；Slidev 仍实际 build | 系统 Python / 任意 Python 3 |
-| `test_check_episode_negative.py` | 32 项回归：旧 Manim + motion 时长/引擎/cue/顺序 + 节奏标注 + recording 包 + 生成器幂等/失败不写包 + Reveal data-slide/资源/strict 跳过 build | 系统 Python / 任意 Python 3 |
+| `check-episode.py` | 检查锚点、页数映射、研究包；按 `segments.json` 分派 motion/manim；默认 contract 五维状态（STRUCTURAL/RUNTIME/CONTENT_QUALITY/RECORDING/DELIVERY），必需证据缺失返回 BLOCKED；`--status-mode legacy` 保留旧输出 | 系统 Python / 任意 Python 3 |
+| `qa_runtime.py` | 真实运行时 QA：Motion typecheck + `record.html?probe=1`、Reveal 静态服务 + headless Chrome 加载/截图；写 `qa/runtime.json` | 课程 `node_modules` + Chrome + Python |
+| `qa_content.py` | 确定性内容/结构/泄漏检查 + 可选 AI 视觉审查；生成 `qa/content-quality.json`、`trace-report.json`、`delivery-manifest.json` | 系统 Python |
+| `clean_room_check.py` | 独立临时目录 clean-room：`uv sync --frozen`、完整 Schema、`pnpm install --frozen-lockfile`、runtime/content/checker | Python + uv + pnpm + Chrome |
+| `contract-runtime/` | 项目内 JSON Schema 运行时（`jsonschema==4.26.0`，`uv.lock`，Python 3.12） | 本目录 `.venv`（不提交） |
+| `test_check_episode_negative.py` | 40 项回归：旧 Manim + motion + 节奏 + recording + Reveal + 5 项 contract 状态/证据测试 | 系统 Python / 任意 Python 3 |
 | `skills/motion-isolation/` | 默认动画 Skill 实体：3B1B 风格、45–90 秒、`[ANIMATION]`/`[SEGMENT]`/`record.html` | 只写 `04_motion_src` 的 scenes/projects |
 | `skills/manim-isolation/` | **Legacy/fallback** Manim 隔离 Skill；仅 `engine=manim` | 只写 `04_manim_src/scenes` |
 
@@ -26,37 +30,37 @@
 
 ```powershell
 # 新建一集
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\new-episode.ps1 -Name course-example -Mode course
+powershell -NoProfile -ExecutionPolicy Bypass -File <repo>\tools\new-episode.ps1 -Name course-example -Mode course
 
 # Motion Canvas 录制页（主路径）
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\motion-run.ps1 -Episode course-example -Segment attention_scores
+powershell -NoProfile -ExecutionPolicy Bypass -File <repo>\tools\motion-run.ps1 -Episode course-example -Segment attention_scores
 
 # Reveal 课件（course 默认；同步 .vendor 并启动静态服务）
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\reveal-run.ps1 -Episode course-example -Port 3040
+powershell -NoProfile -ExecutionPolicy Bypass -File <repo>\tools\reveal-run.ps1 -Episode course-example -Port 3040
 
 # Slidev 课件（technical/news/旧课）
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\slidev-run.ps1 -Episode course-example -Mode dev -Port 3030
+powershell -NoProfile -ExecutionPolicy Bypass -File <repo>\tools\slidev-run.ps1 -Episode course-example -Mode dev -Port 3030
 
 # 构建静态页面
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\slidev-run.ps1 -Episode course-example -Mode build
+powershell -NoProfile -ExecutionPolicy Bypass -File <repo>\tools\slidev-run.ps1 -Episode course-example -Mode build
 
 # 渲染一个 Manim 兜底锚点（仅 engine=manim）
-powershell -NoProfile -ExecutionPolicy Bypass -File D:\CourseStudio\tools\render-manim.ps1 -Episode course-example -Name navier_stokes -SceneClass NavierStokes -Quality l -TimeoutSeconds 180
+powershell -NoProfile -ExecutionPolicy Bypass -File <repo>\tools\render-manim.ps1 -Episode course-example -Name navier_stokes -SceneClass NavierStokes -Quality l -TimeoutSeconds 180
 
 # Motion Canvas 段落检查
-python D:\CourseStudio\tools\check-episode.py course-example --mode course --stage motion
+python <repo>\tools\check-episode.py course-example --mode course --stage motion
 
 # 录制就绪包结构检查
-python D:\CourseStudio\tools\check-episode.py course-example --mode course --stage recording
+python <repo>\tools\check-episode.py course-example --mode course --stage recording
 
 # 生成/刷新录制就绪包
-python D:\CourseStudio\tools\build-recording-package.py course-example
+python <repo>\tools\build-recording-package.py course-example
 
 # 检查交接
-python D:\CourseStudio\tools\check-episode.py course-example --mode course --stage qa --strict
+python <repo>\tools\check-episode.py course-example --mode course --stage qa --strict
 
 # 检查器回归（旧 Manim + motion + recording）
-python D:\CourseStudio\tools\test_check_episode_negative.py
+python <repo>\tools\test_check_episode_negative.py
 ```
 
 ## 3. 兼容/维护工具
@@ -74,7 +78,7 @@ python D:\CourseStudio\tools\test_check_episode_negative.py
 - Reveal：`tools/reveal-runtime/node_modules` 与课程的 `03_slides/.vendor/` 都不进 Git；`reveal-run.ps1` 只做 dist 同步 + Python 静态服务，不引入额外 Node 服务器。
 - 动画段落仍由 `04_motion_src/record.html?segment=<name>` 独立录屏；课件只放占位，不嵌 MP4。
 - Motion Canvas 依赖在 `courses/<slug>/04_motion_src/node_modules`；录制文件在 `05_recording/recordings/`，都不进 Git。
-- OBS 由人工安装和操作，参考路径 `D:\Program Files\obs-studio\bin\64bit\obs64.exe`；本仓库不安装、不调用、不自动化 OBS，相关检查标 `NOT_RUN`。
+- OBS 由人工安装和操作，参考路径 `<OBS install path>`；本仓库不安装、不调用、不自动化 OBS，相关检查标 `NOT_RUN`。
 - 需要重建 Slidev：在 `slidev-runtime/` 运行 `pnpm install`；不要把 `node_modules` 复制进课程。
 - 需要重建课程环境：在课程目录运行 `uv sync` / `uv add manim`；不要全局 `pip install`。
 - 任何新工具先放本目录，确认隔离后再接入 `workflows/episode-pipeline.md`。

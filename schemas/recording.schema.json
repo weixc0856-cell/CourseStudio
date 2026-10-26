@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coursestudio.local/schemas/recording/1.0.0",
+  "title": "CourseStudio Recording Manifest",
+  "description": "Contract v1.0.0. Recording tasks are generated from script + segments. A VERIFIED task requires a real file, sha256, and ffprobe evidence; record_status must never be inferred from file existence alone.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "episode_id", "generated_at", "canvas", "segments"],
+  "properties": {
+    "contract_version": {"const": "1.0.0"},
+    "episode_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+    "generated_at": {"type": "string", "minLength": 1},
+    "canvas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "fps"],
+      "properties": {
+        "width": {"const": 1920},
+        "height": {"const": 1080},
+        "fps": {"const": 60}
+      }
+    },
+    "segments": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/task"}
+    }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "bytes"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "bytes": {"type": "integer", "minimum": 1}
+      }
+    },
+    "ffprobe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["duration_seconds", "fps", "width", "height"],
+      "properties": {
+        "duration_seconds": {"type": "number", "minimum": 0.1},
+        "fps": {"type": "number", "minimum": 1},
+        "width": {"type": "integer", "minimum": 1},
+        "height": {"type": "integer", "minimum": 1}
+      }
+    },
+    "humanAcceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision"],
+      "properties": {
+        "decision": {"enum": ["PENDING", "ACCEPTED", "REJECTED"]},
+        "reviewer": {"type": "string"},
+        "reviewed_at": {"type": "string"},
+        "notes": {"type": "string"}
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["order", "segment_id", "name", "engine", "url", "declared_seconds", "cue", "scene", "project", "record_status"],
+      "properties": {
+        "order": {"type": "integer", "minimum": 1},
+        "segment_id": {"type": "string", "pattern": "^SEG-[0-9]{3}$"},
+        "name": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$"},
+        "engine": {"enum": ["motion", "manim"]},
+        "url": {"type": "string", "pattern": "^https?://[^/]+/record\\.html\\?segment=[A-Za-z0-9_-]+$"},
+        "declared_seconds": {"type": "number", "minimum": 0.1},
+        "cue": {"type": "string", "pattern": "^05_recording/cues/.+\\.md$"},
+        "scene": {"type": "string", "minLength": 1},
+        "project": {"type": "string", "minLength": 1},
+        "record_status": {"enum": ["NOT_RUN", "IN_PROGRESS", "RECORDED_UNVERIFIED", "VERIFIED", "REJECTED"]},
+        "recording": {"$ref": "#/$defs/artifact"},
+        "ffprobe": {"$ref": "#/$defs/ffprobe"},
+        "recorded_at": {"type": "string"},
+        "operator": {"type": "string"},
+        "human_acceptance": {"$ref": "#/$defs/humanAcceptance"},
+        "notes": {"type": "string"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"record_status": {"const": "VERIFIED"}}, "required": ["record_status"]},
+          "then": {
+            "required": ["recording", "ffprobe", "recorded_at", "operator"],
+            "properties": {
+              "human_acceptance": {"$ref": "#/$defs/humanAcceptance"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"record_status": {"enum": ["NOT_RUN", "IN_PROGRESS", "REJECTED"]}}, "required": ["record_status"]},
+          "then": {"properties": {"recording": {"type": "null"}}}
+        }
+      ]
+    }
+  }
+}

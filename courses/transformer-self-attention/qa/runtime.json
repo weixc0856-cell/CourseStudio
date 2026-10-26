@@ -1,0 +1,45 @@
+{
+  "contract_version": "1.0.0",
+  "episode_id": "transformer-self-attention",
+  "generated_at": "2026-10-26T14:38:13Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "kind": "typecheck",
+      "status": "PASS",
+      "exit_code": 0,
+      "log": "qa/runtime/typecheck.log"
+    },
+    {
+      "kind": "motion",
+      "name": "scores_to_weights",
+      "status": "PASS",
+      "declared_seconds": 68,
+      "probe_seconds": 68,
+      "probe_frames": 4080,
+      "probe_fps": 60,
+      "log": "qa/runtime/probe-scores_to_weights.json"
+    },
+    {
+      "kind": "browser",
+      "deck": "reveal",
+      "status": "PASS",
+      "slides": 12,
+      "screenshots": [
+        "qa/runtime/screens/slide-1.png",
+        "qa/runtime/screens/slide-2.png",
+        "qa/runtime/screens/slide-3.png",
+        "qa/runtime/screens/slide-4.png",
+        "qa/runtime/screens/slide-5.png",
+        "qa/runtime/screens/slide-6.png",
+        "qa/runtime/screens/slide-7.png",
+        "qa/runtime/screens/slide-8.png",
+        "qa/runtime/screens/slide-9.png",
+        "qa/runtime/screens/slide-10.png",
+        "qa/runtime/screens/slide-11.png",
+        "qa/runtime/screens/slide-12.png"
+      ],
+      "notes": "Chrome DOM + all 12 page screenshots; console errors not captured by this runner."
+    }
+  ]
+}

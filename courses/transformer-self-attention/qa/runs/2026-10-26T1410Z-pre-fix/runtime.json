@@ -1,0 +1,36 @@
+{
+  "contract_version": "1.0.0",
+  "episode_id": "transformer-self-attention",
+  "generated_at": "2026-10-26T13:56:39Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "kind": "typecheck",
+      "status": "PASS",
+      "exit_code": 0,
+      "log": "qa/runtime/typecheck.log"
+    },
+    {
+      "kind": "motion",
+      "name": "scores_to_weights",
+      "status": "PASS",
+      "declared_seconds": 68,
+      "probe_seconds": 68,
+      "probe_frames": 4080,
+      "probe_fps": 60,
+      "log": "qa/runtime/probe-scores_to_weights.json"
+    },
+    {
+      "kind": "browser",
+      "deck": "reveal",
+      "status": "PASS",
+      "slides": 12,
+      "screenshots": [
+        "qa/runtime/screens/slide-1.png",
+        "qa/runtime/screens/slide-6.png",
+        "qa/runtime/screens/slide-12.png"
+      ],
+      "notes": "Chrome DOM + representative screenshots; console errors not captured by this runner."
+    }
+  ]
+}

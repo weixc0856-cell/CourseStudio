@@ -1,0 +1,113 @@
+{
+  "contract_version": "1.0.0",
+  "episode_id": "transformer-self-attention",
+  "generated_at": "2026-10-26T14:38:14Z",
+  "status": "READY",
+  "blocking_reasons": [],
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3749,
+      "sha256": "eb4f0e353509fa4d28b12f13359a7bfc1edabadb54ea718307841c62d9abcbbb"
+    },
+    {
+      "path": "01_research/00-task-brief.md",
+      "bytes": 6568,
+      "sha256": "b2c10c33586fed6f3de5e5876a1da142976f9c1db53fd22f1606f7011eb5dc41"
+    },
+    {
+      "path": "01_research/01-source-inventory.md",
+      "bytes": 8886,
+      "sha256": "067e49ddca3db091d16e27bff61e9573747933fadbc731074ca78e9efa0cd9ed"
+    },
+    {
+      "path": "01_research/02-claim-evidence-ledger.csv",
+      "bytes": 8220,
+      "sha256": "eda5a711596aa2be0f8d4fde82a708b2da41a1f1b22e15a7d96c470730cddc5b"
+    },
+    {
+      "path": "01_research/03-knowledge-structure.md",
+      "bytes": 11315,
+      "sha256": "03ff4a029c875f06631dbe1a6935591f4d9b48ee8c232f3e40f5af0185207b4c"
+    },
+    {
+      "path": "01_research/04-course-input-brief.md",
+      "bytes": 5633,
+      "sha256": "9dbbd6fe0f0a212c8df9ddd13c3914220546228ec5c2c2f634e649208cd996a0"
+    },
+    {
+      "path": "01_research/05-quality-report.md",
+      "bytes": 7710,
+      "sha256": "fa32dfcd75f695c08d36953c09d0ecd1de7fbd1970bf132115214e87ea1e72bf"
+    },
+    {
+      "path": "01_research/06-course-outline.md",
+      "bytes": 6409,
+      "sha256": "8b30e347308579d84cfc41acb53afd8f09b0503207fb3450e2e8fb714b20fd25"
+    },
+    {
+      "path": "02_scripts/lecture_script.md",
+      "bytes": 15908,
+      "sha256": "ed7d42b493165ef17dd21594c3c5d7bbdc7d42dce0af22f9fca39ab611d0ce6a"
+    },
+    {
+      "path": "03_slides/index.html",
+      "bytes": 14828,
+      "sha256": "46cca17f506f11d68f978f1bb4745b0005fe67efcd6c937ca9e501fcfd8136e3"
+    },
+    {
+      "path": "03_slides/assets/deck.css",
+      "bytes": 9974,
+      "sha256": "427e0e12b9645e5ffea9b40973e3588b2868ecee1c3e6274269da59867d92c06"
+    },
+    {
+      "path": "04_motion_src/segments.json",
+      "bytes": 545,
+      "sha256": "12ce49617609391b7671f6319ebc7b0017335742d609dcc80582b427d36325e9"
+    },
+    {
+      "path": "04_motion_src/src/scenes/scores_to_weights.tsx",
+      "bytes": 17677,
+      "sha256": "6e9e1fd6da67296ae89e23d772aa1727d652820350350ced9747de651a9732ee"
+    },
+    {
+      "path": "04_motion_src/src/projects/scores_to_weights.ts",
+      "bytes": 172,
+      "sha256": "5afff8209c66428bfb16f3c0515c9a4ca138e7383af56c253c45453691b70caa"
+    },
+    {
+      "path": "05_recording/manifest.json",
+      "bytes": 675,
+      "sha256": "e6c99e57da10f794423d106daa9171512dfcf01268170f26ed73a7e98de0b716"
+    },
+    {
+      "path": "05_recording/checklist.md",
+      "bytes": 3855,
+      "sha256": "bf2979a2b1abfd7f8701b374138bf2bb032c8e0e6ec7def6ebffb2a2576838fb"
+    },
+    {
+      "path": "05_recording/cues/scores_to_weights.md",
+      "bytes": 1095,
+      "sha256": "cf402a67b658bccebc332d7906899fa63fa09bea1fefe9f180ecb4f3efc50c1d"
+    },
+    {
+      "path": "qa/runtime.json",
+      "bytes": 1333,
+      "sha256": "505a9aef9bc18fdb654a3e9a5e328e0422e00213cdcfc540dcc2aa44463e290b"
+    },
+    {
+      "path": "qa/content-quality.json",
+      "bytes": 3074,
+      "sha256": "ae147a2abc6bda7e7ba9a2ef4b0c2ef3505ab43d2ac88a6d4a72f4a144aa4d5a"
+    },
+    {
+      "path": "qa/trace-report.json",
+      "bytes": 2197,
+      "sha256": "0889d8b85e2416ddb2123b90d604fc6d6b2cfa1b7448eb6dd6440b7f0803fb5d"
+    }
+  ],
+  "limitations": [
+    "No final MP4 was generated; RECORDING is NOT_APPLICABLE for package scope.",
+    "Visual review is representative (slides 1/6/12), not exhaustive."
+  ]
+}

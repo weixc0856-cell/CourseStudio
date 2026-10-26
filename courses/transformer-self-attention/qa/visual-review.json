@@ -1,0 +1,27 @@
+{
+  "contract_version": "1.0.0",
+  "episode_id": "transformer-self-attention",
+  "gate": "AI-3",
+  "status": "PASS",
+  "method": [
+    "headless-chrome-screenshot",
+    "AI visual inspection"
+  ],
+  "reviewed_at": "2026-10-26T14:20:00Z",
+  "scope": [
+    "qa/runtime/screens/slide-1.png",
+    "qa/runtime/screens/slide-2.png",
+    "qa/runtime/screens/slide-3.png",
+    "qa/runtime/screens/slide-4.png",
+    "qa/runtime/screens/slide-5.png",
+    "qa/runtime/screens/slide-6.png",
+    "qa/runtime/screens/slide-7.png",
+    "qa/runtime/screens/slide-8.png",
+    "qa/runtime/screens/slide-9.png",
+    "qa/runtime/screens/slide-10.png",
+    "qa/runtime/screens/slide-11.png",
+    "qa/runtime/screens/slide-12.png"
+  ],
+  "limitations": "Full 12-page screenshot review at 1920x1080. This is an AI visual review, not a human sign-off; it checks layout/readability from static screenshots and cannot prove teaching effectiveness or motion quality.",
+  "notes": "All 12 pages render with readable contrast and no observed clipping/overflow. Slides 08/09 no longer contain the internal recording URL; the recording URL remains in 05_recording/ internal metadata."
+}

@@ -16,7 +16,7 @@
 ## 启动命令
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File D:/CourseStudio/tools/motion-run.ps1 `
+powershell -NoProfile -ExecutionPolicy Bypass -File <repo>/tools/motion-run.ps1 `
   -Episode transformer-self-attention -Segment scores_to_weights -Port 9100
 ```
 

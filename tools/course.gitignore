@@ -150,6 +150,10 @@ $RECYCLE.BIN/
 
 # --- 日志与归档 -------------------------------------------------------------
 *.log
+# Course QA evidence logs are intentional, not transient logs.
+!qa/runtime/*.log
+!qa/runs/**/*.log
+!qa/*.log
 logs/
 *.zip
 *.7z

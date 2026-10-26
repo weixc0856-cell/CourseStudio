@@ -1,0 +1,93 @@
+{
+  "contract_version": "1.0.0",
+  "episode_id": "transformer-self-attention",
+  "generated_at": "2026-10-26T14:00:12Z",
+  "status": "FAIL",
+  "checks": [
+    {
+      "check_id": "claims-unique",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "14 rows, 14 unique IDs"
+    },
+    {
+      "check_id": "claims-locators",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "all non-assumption claims have source + locator"
+    },
+    {
+      "check_id": "claims-types",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "types: ASSUMPTION, CLAIM, FACT, INFERENCE"
+    },
+    {
+      "check_id": "sources-inventory",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "S01/S02/S03 present"
+    },
+    {
+      "check_id": "evidence-samples",
+      "kind": "content",
+      "status": "PARTIAL",
+      "evidence": "sampled source snippets: CLM-001=MISSING, CLM-006=OK, CLM-007=OK, CLM-009=OK, CLM-004=OK"
+    },
+    {
+      "check_id": "script-slide-anchors",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "12 anchors; strict 1..N=yes"
+    },
+    {
+      "check_id": "script-timing",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "timing blocks: 1"
+    },
+    {
+      "check_id": "deck-pages",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "12 data-slide pages; strict 1..N=yes"
+    },
+    {
+      "check_id": "deck-assets",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "local assets present"
+    },
+    {
+      "check_id": "deck-leak-scan",
+      "kind": "content",
+      "status": "FAIL",
+      "evidence": "2 leak(s): line 172 record.html; line 202 record.html",
+      "findings": [
+        {
+          "line": 172,
+          "label": "record.html",
+          "text": "<p>68 秒 · <code>record.html?segment=scores_to_weights</code> · 独立录屏，不嵌入 MP4</p>"
+        },
+        {
+          "line": 202,
+          "label": "record.html",
+          "text": "<p class=\"segment-inline\">动画段落 <code>scores_to_weights</code> · 68s · <code>record.html?segment=scores_to_weights</code></p>"
+        }
+      ]
+    },
+    {
+      "check_id": "segment-recording-mapping",
+      "kind": "content",
+      "status": "FAIL",
+      "evidence": "scores_to_weights: missing cue"
+    },
+    {
+      "check_id": "visual-review",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "AI visual review: ['qa/runtime/screens/slide-1.png', 'qa/runtime/screens/slide-6.png', 'qa/runtime/screens/slide-8.png', 'qa/runtime/screens/slide-12.png']; limitations: Representative sample only; slides 2-5, 7, 9-11 were not individually inspected. Slide 8 visibly contains the internal recording URL 'record.html?segment=scores_to_weights'; this is flagged separately by the deck leak scan and requires a content change approval."
+    }
+  ],
+  "notes": "Deterministic content/structure/leak checks plus optional AI visual review. No human sign-off."
+}

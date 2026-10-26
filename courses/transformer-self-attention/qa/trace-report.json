@@ -1,0 +1,135 @@
+{
+  "contract_version": "1.0.0",
+  "episode_id": "transformer-self-attention",
+  "generated_at": "2026-10-26T14:38:14Z",
+  "source": "02_scripts/lecture_script.md + 04_motion_src/segments.json + 03_slides/index.html",
+  "claims": {
+    "CLM-001": {
+      "slides": [
+        1,
+        2,
+        3
+      ],
+      "segments": []
+    },
+    "CLM-002": {
+      "slides": [
+        1,
+        4
+      ],
+      "segments": []
+    },
+    "CLM-003": {
+      "slides": [
+        1,
+        2,
+        3
+      ],
+      "segments": []
+    },
+    "CLM-004": {
+      "slides": [
+        2,
+        3,
+        4
+      ],
+      "segments": []
+    },
+    "CLM-005": {
+      "slides": [
+        5,
+        6
+      ],
+      "segments": []
+    },
+    "CLM-006": {
+      "slides": [
+        7
+      ],
+      "segments": []
+    },
+    "CLM-007": {
+      "slides": [
+        7
+      ],
+      "segments": []
+    },
+    "CLM-008": {
+      "slides": [
+        7
+      ],
+      "segments": []
+    },
+    "CLM-009": {
+      "slides": [
+        8,
+        9
+      ],
+      "segments": [
+        "scores_to_weights"
+      ]
+    },
+    "CLM-010": {
+      "slides": [
+        10,
+        11
+      ],
+      "segments": [
+        "scores_to_weights"
+      ]
+    },
+    "CLM-011": {
+      "slides": [
+        4
+      ],
+      "segments": []
+    },
+    "CLM-012": {
+      "slides": [
+        12
+      ],
+      "segments": [
+        "scores_to_weights"
+      ]
+    },
+    "CLM-013": {
+      "slides": [
+        12
+      ],
+      "segments": [
+        "scores_to_weights"
+      ]
+    },
+    "CLM-014": {
+      "slides": [
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "segments": [
+        "scores_to_weights"
+      ]
+    }
+  },
+  "segments": [
+    {
+      "name": "scores_to_weights",
+      "order": 1,
+      "duration_seconds": 68,
+      "slides": []
+    }
+  ],
+  "deck_pages": 12,
+  "orphan_claims": [],
+  "orphan_slides": [],
+  "coverage": {
+    "claims_mapped": 14,
+    "claims_total": 14,
+    "slides_mapped": 12,
+    "slides_total": 12
+  }
+}

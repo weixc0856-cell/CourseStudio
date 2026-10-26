@@ -1,0 +1,17 @@
+{
+  "claim_id": "CLM-004",
+  "claim_text": "Negative fixture: a FACT with no source must fail.",
+  "claim_type": "FACT",
+  "source_ids": [],
+  "source_locators": [],
+  "inspection_scope": "negative fixture",
+  "scope_limit": "FACT requires a source",
+  "derivation_or_data": "N/A",
+  "evidence_status": "NOT_CHECKED",
+  "reasoning_status": "NOT_CHECKED",
+  "execution_status": "NOT_APPLICABLE",
+  "validation_status": "NOT_RUN",
+  "conflict_status": "NOT_CHECKED",
+  "used_in_artifact": [],
+  "review_notes": {"notes": "negative fixture", "decision": "PENDING"}
+}

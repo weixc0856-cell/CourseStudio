@@ -1,0 +1,88 @@
+{
+  "contract_version": "1.0.0",
+  "episode_id": "transformer-self-attention",
+  "generated_at": "2026-10-26T14:38:14Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "check_id": "claims-unique",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "14 rows, 14 unique IDs"
+    },
+    {
+      "check_id": "claims-locators",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "all non-assumption claims have source + locator"
+    },
+    {
+      "check_id": "claims-types",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "types: ASSUMPTION, CLAIM, FACT, INFERENCE"
+    },
+    {
+      "check_id": "sources-inventory",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "S01/S02/S03 present"
+    },
+    {
+      "check_id": "evidence-samples",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "sampled source snippets: CLM-001=OK, CLM-006=OK, CLM-007=OK, CLM-009=OK, CLM-004=OK"
+    },
+    {
+      "check_id": "script-slide-anchors",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "12 anchors; strict 1..N=yes"
+    },
+    {
+      "check_id": "script-timing",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "timing blocks: 1"
+    },
+    {
+      "check_id": "deck-pages",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "12 data-slide pages; strict 1..N=yes"
+    },
+    {
+      "check_id": "deck-assets",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "local assets present"
+    },
+    {
+      "check_id": "resource-licenses",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "no remote assets; local CSS only; external sources are cited in 01-source-inventory.md, no bundled third-party media"
+    },
+    {
+      "check_id": "deck-leak-scan",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "no internal metadata",
+      "findings": []
+    },
+    {
+      "check_id": "segment-recording-mapping",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "segments map to recording tasks/cues"
+    },
+    {
+      "check_id": "visual-review",
+      "kind": "content",
+      "status": "PASS",
+      "evidence": "AI visual review: ['qa/runtime/screens/slide-1.png', 'qa/runtime/screens/slide-2.png', 'qa/runtime/screens/slide-3.png', 'qa/runtime/screens/slide-4.png', 'qa/runtime/screens/slide-5.png', 'qa/runtime/screens/slide-6.png', 'qa/runtime/screens/slide-7.png', 'qa/runtime/screens/slide-8.png', 'qa/runtime/screens/slide-9.png', 'qa/runtime/screens/slide-10.png', 'qa/runtime/screens/slide-11.png', 'qa/runtime/screens/slide-12.png']; limitations: Full 12-page screenshot review at 1920x1080. This is an AI visual review, not a human sign-off; it checks layout/readability from static screenshots and cannot prove teaching effectiveness or motion quality."
+    }
+  ],
+  "notes": "Deterministic content/structure/leak checks plus optional AI visual review. No human sign-off."
+}

@@ -1,0 +1,126 @@
+{
+  "contract_version": "1.0.0",
+  "cases": [
+    {
+      "id": "missing_required_field",
+      "description": "Claim is missing claim_text.",
+      "expected": {
+        "status": "CONTRACT_ERROR",
+        "exit_code": 3,
+        "delivery": "NOT_READY",
+        "reason_contains": "claim_text",
+        "log_contains": "claim_text"
+      }
+    },
+    {
+      "id": "duplicate_claim_id",
+      "description": "Two claims share CLM-001.",
+      "expected": {
+        "status": "FAIL",
+        "exit_code": 1,
+        "delivery": "NOT_READY",
+        "reason_contains": "duplicate claim",
+        "log_contains": "duplicate claim"
+      }
+    },
+    {
+      "id": "unresolved_source",
+      "description": "Claim references SRC-404 which is absent from sources.json.",
+      "expected": {
+        "status": "FAIL",
+        "exit_code": 1,
+        "delivery": "NOT_READY",
+        "reason_contains": "unknown source",
+        "log_contains": "unknown source"
+      }
+    },
+    {
+      "id": "missing_deck_asset",
+      "description": "Deck references ./assets/missing.css.",
+      "expected": {
+        "status": "FAIL",
+        "exit_code": 1,
+        "delivery": "NOT_READY",
+        "reason_contains": "missing local asset",
+        "log_contains": "missing local asset"
+      }
+    },
+    {
+      "id": "animation_type_error",
+      "description": "Motion typecheck reports FAIL.",
+      "expected": {
+        "status": "FAIL",
+        "exit_code": 1,
+        "delivery": "NOT_READY",
+        "reason_contains": "typecheck",
+        "log_contains": "typecheck"
+      }
+    },
+    {
+      "id": "actual_duration_mismatch",
+      "description": "Actual probe duration 75s differs from declared 60s.",
+      "expected": {
+        "status": "FAIL",
+        "exit_code": 1,
+        "delivery": "NOT_READY",
+        "reason_contains": "actual duration",
+        "log_contains": "actual duration"
+      }
+    },
+    {
+      "id": "cue_order_mismatch",
+      "description": "Recording task order 2 does not match segment order 1.",
+      "expected": {
+        "status": "FAIL",
+        "exit_code": 1,
+        "delivery": "NOT_READY",
+        "reason_contains": "order",
+        "log_contains": "order"
+      }
+    },
+    {
+      "id": "missing_runtime_evidence",
+      "description": "No qa.runtime run and the runtime dimension is NOT_RUN.",
+      "expected": {
+        "status": "BLOCKED",
+        "exit_code": 2,
+        "delivery": "NOT_READY",
+        "reason_contains": "runtime",
+        "log_contains": "runtime"
+      }
+    },
+    {
+      "id": "audience_leak",
+      "description": "Audience deck contains an internal record.html URL.",
+      "expected": {
+        "status": "FAIL",
+        "exit_code": 1,
+        "delivery": "NOT_READY",
+        "reason_contains": "record.html",
+        "log_contains": "record.html"
+      }
+    },
+    {
+      "id": "content_needs_review",
+      "description": "Content quality evidence requires automatic rework or owner decision.",
+      "expected": {
+        "status": "NEEDS_REVIEW",
+        "exit_code": 2,
+        "delivery": "NOT_READY",
+        "reason_contains": "NEEDS_REVIEW",
+        "log_contains": "NEEDS_REVIEW"
+      }
+    },
+    {
+      "id": "stale_qa",
+      "description": "Script content changed after the QA run; the QA input hash is stale.",
+      "expected": {
+        "status": "BLOCKED",
+        "exit_code": 2,
+        "delivery": "NOT_READY",
+        "reason_contains": "stale",
+        "log_contains": "stale"
+      }
+    }
+  ]
+}

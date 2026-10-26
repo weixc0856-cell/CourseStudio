@@ -1,0 +1,82 @@
+===== stage research =====
+Episode: transformer-self-attention  mode=course  stage=research
+Status:  STRUCTURAL_PASS
+Dimensions: STRUCTURAL=PASS RUNTIME=NOT_APPLICABLE CONTENT_QUALITY=NOT_APPLICABLE RECORDING=NOT_APPLICABLE DELIVERY=NOT_READY
+Research: OK (00-06 present and non-empty)
+EXIT=0
+===== stage script =====
+Episode: transformer-self-attention  mode=course  stage=script
+Status:  STRUCTURAL_PASS
+Dimensions: STRUCTURAL=PASS RUNTIME=NOT_APPLICABLE CONTENT_QUALITY=NOT_APPLICABLE RECORDING=NOT_APPLICABLE DELIVERY=NOT_READY
+Research: OK (00-06 present and non-empty)
+Slides:  12 slide(s) [reveal]
+Mapping: 12 anchor(s), 12 slide(s), buffer 0 (N >= M allowed)
+Segments: 1 entr(ies), 1 motion
+Anims:   ['scores_to_weights']
+Timing:  1 block(s)
+  - scores_to_weights: engine=motion, scene=OK, project=OK, cue=OK, declared=68.0s, real=NOT_VERIFIED
+Evidence: runtime=PASS content=PASS recording=NOT_APPLICABLE
+EXIT=0
+===== stage motion =====
+Episode: transformer-self-attention  mode=course  stage=motion
+Status:  STRUCTURAL_PASS
+Dimensions: STRUCTURAL=PASS RUNTIME=NOT_APPLICABLE CONTENT_QUALITY=NOT_APPLICABLE RECORDING=NOT_APPLICABLE DELIVERY=NOT_READY
+Research: OK (00-06 present and non-empty)
+Slides:  12 slide(s) [reveal]
+Mapping: 12 anchor(s), 12 slide(s), buffer 0 (N >= M allowed)
+Segments: 1 entr(ies), 1 motion
+Anims:   ['scores_to_weights']
+Timing:  1 block(s)
+  - scores_to_weights: engine=motion, scene=OK, project=OK, cue=OK, declared=68.0s, real=NOT_VERIFIED
+Evidence: runtime=PASS content=PASS recording=NOT_APPLICABLE
+EXIT=0
+===== stage recording =====
+Episode: transformer-self-attention  mode=course  stage=recording
+Status:  STRUCTURAL_PASS
+Dimensions: STRUCTURAL=PASS RUNTIME=NOT_APPLICABLE CONTENT_QUALITY=NOT_APPLICABLE RECORDING=NOT_APPLICABLE DELIVERY=NOT_READY
+Research: OK (00-06 present and non-empty)
+Slides:  12 slide(s) [reveal]
+Mapping: 12 anchor(s), 12 slide(s), buffer 0 (N >= M allowed)
+Segments: 1 entr(ies), 1 motion
+Anims:   ['scores_to_weights']
+Timing:  1 block(s)
+  - scores_to_weights: engine=motion, scene=OK, project=OK, cue=OK, declared=68.0s, real=NOT_VERIFIED
+Recording: checked (manifest=OK, checklist=OK, cues_dir=OK, recordings_dir=OK, recordings=0)
+Evidence: runtime=PASS content=PASS recording=NOT_APPLICABLE
+EXIT=0
+===== stage slides =====
+Episode: transformer-self-attention  mode=course  stage=slides
+Status:  STRUCTURAL_PASS
+Dimensions: STRUCTURAL=PASS RUNTIME=NOT_APPLICABLE CONTENT_QUALITY=NOT_APPLICABLE RECORDING=NOT_APPLICABLE DELIVERY=NOT_READY
+Research: OK (00-06 present and non-empty)
+Slides:  12 slide(s) [reveal]
+Mapping: 12 anchor(s), 12 slide(s), buffer 0 (N >= M allowed)
+Segments: 1 entr(ies), 1 motion
+Anims:   ['scores_to_weights']
+Timing:  1 block(s)
+  - scores_to_weights: engine=motion, scene=OK, project=OK, cue=OK, declared=68.0s, real=NOT_VERIFIED
+Evidence: runtime=PASS content=PASS recording=NOT_APPLICABLE
+EXIT=0
+===== stage qa --strict =====
+Episode: transformer-self-attention  mode=course  stage=qa
+Status:  READY
+Dimensions: STRUCTURAL=PASS RUNTIME=PASS CONTENT_QUALITY=PASS RECORDING=NOT_APPLICABLE DELIVERY=READY
+Research: OK (00-06 present and non-empty)
+Slides:  12 slide(s) [reveal]
+Mapping: 12 anchor(s), 12 slide(s), buffer 0 (N >= M allowed)
+Segments: 1 entr(ies), 1 motion
+Anims:   ['scores_to_weights']
+Timing:  1 block(s)
+Build:   SKIPPED (Reveal deck: build check deferred to Phase 4)
+  - scores_to_weights: engine=motion, scene=OK, project=OK, cue=OK, declared=68.0s, real=NOT_VERIFIED
+Recording: checked (manifest=OK, checklist=OK, cues_dir=OK, recordings_dir=OK, recordings=0)
+Evidence: runtime=PASS content=PASS recording=NOT_APPLICABLE
+EXIT=0
+===== builder --check =====
+Episode: transformer-self-attention
+Motion segments: 1
+Manifest: 05_recording\manifest.json
+Cues: cues/scores_to_weights.md
+Checklist: 05_recording\checklist.md
+Status: CHECK_ONLY (no files written)
+EXIT=0

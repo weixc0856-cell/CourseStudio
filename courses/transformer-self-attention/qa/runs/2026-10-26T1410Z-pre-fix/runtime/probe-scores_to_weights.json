@@ -1,0 +1,13 @@
+{
+  "segment": "scores_to_weights",
+  "ready": true,
+  "paused": false,
+  "frame": 3,
+  "durationFrames": 4080,
+  "fps": 60,
+  "seconds": 68,
+  "state": 0,
+  "loop": false,
+  "quality": 1,
+  "probe": true
+}

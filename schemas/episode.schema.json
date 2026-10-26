@@ -1,0 +1,475 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coursestudio.local/schemas/episode/1.0.0",
+  "title": "CourseStudio Episode",
+  "description": "Contract v1.0.0. Single source of truth for episode identity, artifact references, stage status, and delivery eligibility. This schema is a design artifact for R1; it is not yet enforced by production tools. R2.1: HUMAN is replaced by CONTENT_QUALITY; human.accept is replaced by content.review.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "episode_id",
+    "mode",
+    "title",
+    "created_at",
+    "updated_at",
+    "toolchain",
+    "artifacts",
+    "stages",
+    "delivery"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "episode_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "mode": {
+      "enum": [
+        "course",
+        "technical",
+        "news",
+        "podcast"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "updated_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "toolchain": {
+      "$ref": "#/$defs/toolchain"
+    },
+    "artifacts": {
+      "$ref": "#/$defs/artifacts"
+    },
+    "stages": {
+      "$ref": "#/$defs/stages"
+    },
+    "delivery": {
+      "$ref": "#/$defs/delivery"
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/approval"
+      },
+      "default": []
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "python": {
+          "type": "string"
+        },
+        "node": {
+          "type": "string"
+        },
+        "pnpm": {
+          "type": "string"
+        },
+        "ffmpeg": {
+          "type": "string"
+        },
+        "chrome": {
+          "type": "string"
+        },
+        "reveal": {
+          "type": "string"
+        },
+        "slidev": {
+          "type": "string"
+        },
+        "motion": {
+          "type": "string"
+        },
+        "manim": {
+          "type": "string"
+        }
+      }
+    },
+    "artifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "research",
+        "script",
+        "qa_runs"
+      ],
+      "properties": {
+        "research": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sources": {
+          "type": "string"
+        },
+        "script": {
+          "type": "string",
+          "minLength": 1
+        },
+        "segments": {
+          "type": "string"
+        },
+        "deck": {
+          "type": "string"
+        },
+        "recording": {
+          "type": "string"
+        },
+        "acceptance": {
+          "type": "string"
+        },
+        "qa_runs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "statusDimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "STRUCTURAL",
+        "RUNTIME",
+        "CONTENT_QUALITY",
+        "RECORDING",
+        "DELIVERY"
+      ],
+      "properties": {
+        "STRUCTURAL": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "NOT_RUN",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "RUNTIME": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "NOT_RUN",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "RECORDING": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "NOT_RUN",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "DELIVERY": {
+          "enum": [
+            "READY",
+            "NOT_READY"
+          ]
+        },
+        "CONTENT_QUALITY": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "BLOCKED",
+            "PARTIAL",
+            "NEEDS_REVIEW",
+            "NOT_RUN",
+            "NOT_APPLICABLE"
+          ]
+        }
+      }
+    },
+    "commandRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cmd",
+        "exit_code",
+        "log",
+        "started_at",
+        "ended_at"
+      ],
+      "properties": {
+        "cmd": {
+          "type": "string",
+          "minLength": 1
+        },
+        "exit_code": {
+          "type": "integer"
+        },
+        "log": {
+          "type": "string",
+          "minLength": 1
+        },
+        "started_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ended_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tool_versions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "evidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "log",
+            "json",
+            "screenshot",
+            "probe",
+            "ffprobe",
+            "build",
+            "human",
+            "other"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "summary": {
+          "type": "string"
+        }
+      }
+    },
+    "stageRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "inputs",
+        "outputs",
+        "updated_at"
+      ],
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/statusDimensions"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifactRef"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifactRef"
+          }
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/commandRecord"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidenceRef"
+          }
+        },
+        "updated_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "stages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "intake",
+        "research",
+        "design",
+        "script",
+        "visual",
+        "package",
+        "qa.static",
+        "qa.runtime",
+        "content.review",
+        "record",
+        "deliver"
+      ],
+      "properties": {
+        "intake": {
+          "$ref": "#/$defs/stageRecord"
+        },
+        "research": {
+          "$ref": "#/$defs/stageRecord"
+        },
+        "design": {
+          "$ref": "#/$defs/stageRecord"
+        },
+        "script": {
+          "$ref": "#/$defs/stageRecord"
+        },
+        "visual": {
+          "$ref": "#/$defs/stageRecord"
+        },
+        "package": {
+          "$ref": "#/$defs/stageRecord"
+        },
+        "qa.static": {
+          "$ref": "#/$defs/stageRecord"
+        },
+        "qa.runtime": {
+          "$ref": "#/$defs/stageRecord"
+        },
+        "content.review": {
+          "$ref": "#/$defs/stageRecord"
+        },
+        "record": {
+          "$ref": "#/$defs/stageRecord"
+        },
+        "deliver": {
+          "$ref": "#/$defs/stageRecord"
+        }
+      }
+    },
+    "blockingReason": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z0-9_]+$"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stage": {
+          "type": "string"
+        }
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "blocking_reasons"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "READY",
+            "NOT_READY"
+          ]
+        },
+        "blocking_reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/blockingReason"
+          }
+        }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approval_id",
+        "scope",
+        "decision",
+        "approved_by",
+        "approved_at"
+      ],
+      "properties": {
+        "approval_id": {
+          "type": "string",
+          "pattern": "^APR-[A-Z0-9-]+$"
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "decision": {
+          "enum": [
+            "APPROVED",
+            "REJECTED",
+            "PENDING"
+          ]
+        },
+        "approved_by": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approved_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "contract_version": "1.0.0",
+  "episode_id": "transformer-self-attention",
+  "gate": "AI-3",
+  "status": "PASS",
+  "method": [
+    "headless-chrome-screenshot",
+    "AI visual inspection"
+  ],
+  "reviewed_at": "2026-10-26T14:00:00Z",
+  "scope": [
+    "qa/runtime/screens/slide-1.png",
+    "qa/runtime/screens/slide-6.png",
+    "qa/runtime/screens/slide-8.png",
+    "qa/runtime/screens/slide-12.png"
+  ],
+  "limitations": "Representative sample only; slides 2-5, 7, 9-11 were not individually inspected. Slide 8 visibly contains the internal recording URL 'record.html?segment=scores_to_weights'; this is flagged separately by the deck leak scan and requires a content change approval.",
+  "notes": "Slides 1, 6, 8, 12 render with readable contrast and no observed clipping/overflow at 1920x1080. This is an AI visual review, not a human sign-off, and does not cover all pages."
+}

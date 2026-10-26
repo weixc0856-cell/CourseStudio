@@ -1,0 +1,12 @@
+{
+  "sources": [
+    {
+      "source_id": "SRC-001",
+      "title": "Contract fixture source (synthetic, not a real paper)",
+      "kind": "synthetic-fixture",
+      "locator": "fixture://source#p1",
+      "url": "https://example.invalid/fixture",
+      "access": "synthetic"
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "contract_version": "1.0.0",
+  "run_id": "RUN-20261026T000000Z-aaaaaaaa",
+  "episode_id": "zz-contract-smoke",
+  "stage": "qa.static",
+  "layer": "L1",
+  "started_at": "2026-10-26T00:00:00Z",
+  "ended_at": "2026-10-26T00:00:05Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "check_id": "QA-STATIC-SCHEMA",
+      "stage": "qa.static",
+      "layer": "L1",
+      "scope": "episode/claims/segments/recording/qa schema",
+      "status": "PASS",
+      "severity": "BLOCKER",
+      "command": "python tests/contract/run_contract_tests.py --schema",
+      "exit_code": 0,
+      "log_path": "qa/static/schema.log",
+      "tool_versions": {
+        "python": "3.12.10"
+      },
+      "inputs": [
+        {
+          "path": "research/claims.jsonl",
+          "sha256": "81736214145cd69b49861e85fb49d8e0d7283bc5dfc29ae78639747e39e47b3c"
+        },
+        {
+          "path": "segments.json",
+          "sha256": "cb2b7ca2ef8995275e2b54f0821fd7f590f785157f661e5bf27c4f1b3e4acd48"
+        },
+        {
+          "path": "05_recording/manifest.json",
+          "sha256": "a6c71fb9710d76d9920bc3d3df084468db8fa4854be28fd9014f73003a2a8472"
+        }
+      ],
+      "outputs": [],
+      "started_at": "2026-10-26T00:00:00Z",
+      "ended_at": "2026-10-26T00:00:02Z"
+    },
+    {
+      "check_id": "QA-STATIC-CLAIM-REFS",
+      "stage": "qa.static",
+      "layer": "L1",
+      "scope": "source IDs, locators, used_in_artifact, claim IDs",
+      "status": "PASS",
+      "severity": "BLOCKER",
+      "command": "python tests/contract/run_contract_tests.py --claims",
+      "exit_code": 0,
+      "log_path": "qa/static/claims.log",
+      "tool_versions": {
+        "python": "3.12.10"
+      },
+      "inputs": [
+        {
+          "path": "research/claims.jsonl",
+          "sha256": "81736214145cd69b49861e85fb49d8e0d7283bc5dfc29ae78639747e39e47b3c"
+        },
+        {
+          "path": "research/sources.json",
+          "sha256": "7df6b9c2be02157aeff85c80218a2971b8a8841c0d176f32189605a5e4fe8bd6"
+        }
+      ],
+      "outputs": [],
+      "started_at": "2026-10-26T00:00:02Z",
+      "ended_at": "2026-10-26T00:00:03Z"
+    },
+    {
+      "check_id": "QA-STATIC-MAPPING",
+      "stage": "qa.static",
+      "layer": "L1",
+      "scope": "slide anchors, segment order, cue mapping",
+      "status": "PASS",
+      "severity": "ERROR",
+      "command": "python tests/contract/run_contract_tests.py --mapping",
+      "exit_code": 0,
+      "log_path": "qa/static/mapping.log",
+      "tool_versions": {
+        "python": "3.12.10"
+      },
+      "inputs": [
+        {
+          "path": "script.md",
+          "sha256": "befe91c03bfecaaafa63c84bacbeaf3a571b453fe9625d8369997b80de0945ba"
+        },
+        {
+          "path": "segments.json",
+          "sha256": "cb2b7ca2ef8995275e2b54f0821fd7f590f785157f661e5bf27c4f1b3e4acd48"
+        },
+        {
+          "path": "slides/index.html",
+          "sha256": "6b6ce2558566452f023733705a7dd4263be57a8225443d0da5dc2949e13bdaf7"
+        }
+      ],
+      "outputs": [],
+      "started_at": "2026-10-26T00:00:03Z",
+      "ended_at": "2026-10-26T00:00:04Z"
+    },
+    {
+      "check_id": "QA-STATIC-LEAK",
+      "stage": "qa.static",
+      "layer": "L1",
+      "scope": "audience deck and narration leakage patterns",
+      "status": "PASS",
+      "severity": "ERROR",
+      "command": "python tests/contract/run_contract_tests.py --leak",
+      "exit_code": 0,
+      "log_path": "qa/static/leak.log",
+      "tool_versions": {
+        "python": "3.12.10"
+      },
+      "inputs": [
+        {
+          "path": "slides/index.html",
+          "sha256": "6b6ce2558566452f023733705a7dd4263be57a8225443d0da5dc2949e13bdaf7"
+        }
+      ],
+      "outputs": [],
+      "started_at": "2026-10-26T00:00:04Z",
+      "ended_at": "2026-10-26T00:00:05Z"
+    }
+  ],
+  "summary": {
+    "counts": {
+      "PASS": 4,
+      "FAIL": 0,
+      "BLOCKED": 0,
+      "NOT_RUN": 0,
+      "NOT_APPLICABLE": 0
+    },
+    "blocking_failures": [],
+    "warnings": [],
+    "skipped": []
+  },
+  "environment": {
+    "python": "3.12.10",
+    "os": "fixture"
+  },
+  "notes": "Synthetic fixture QA run; not a real execution."
+}

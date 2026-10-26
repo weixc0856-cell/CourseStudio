@@ -1,0 +1,467 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coursestudio.local/schemas/qa/1.0.0",
+  "title": "CourseStudio QA Run",
+  "description": "Contract v1.0.0. A QA run is bound to exact input/output hashes. Static PASS and runtime PASS are separate facts. A historical run with mismatched hashes is stale and must not be reused.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "run_id",
+    "episode_id",
+    "stage",
+    "layer",
+    "started_at",
+    "ended_at",
+    "status",
+    "checks"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{8}T[0-9]{6}Z-[a-f0-9]{8}$"
+    },
+    "episode_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "stage": {
+      "enum": [
+        "intake",
+        "research",
+        "design",
+        "script",
+        "visual",
+        "package",
+        "qa.static",
+        "qa.runtime",
+        "content.review",
+        "record",
+        "deliver"
+      ]
+    },
+    "layer": {
+      "enum": [
+        "L1",
+        "L2",
+        "L3"
+      ]
+    },
+    "started_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ended_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "BLOCKED",
+        "NOT_RUN"
+      ]
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/check"
+      }
+    },
+    "summary": {
+      "$ref": "#/$defs/summary"
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "artifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "runtimeEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "typecheck": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "NOT_RUN",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "build": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "NOT_RUN",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "browser_load": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "NOT_RUN",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "probe_seconds": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "probe_frames": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "probe_fps": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ffprobe_seconds": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "screenshots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "log",
+            "json",
+            "screenshot",
+            "probe",
+            "ffprobe",
+            "build",
+            "human",
+            "other"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "summary": {
+          "type": "string"
+        }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reason",
+        "recovery"
+      ],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recovery": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "check_id",
+        "stage",
+        "layer",
+        "scope",
+        "status",
+        "severity",
+        "started_at",
+        "ended_at"
+      ],
+      "properties": {
+        "check_id": {
+          "type": "string",
+          "pattern": "^QA-[A-Z0-9-]+$"
+        },
+        "stage": {
+          "enum": [
+            "intake",
+            "research",
+            "design",
+            "script",
+            "visual",
+            "package",
+            "qa.static",
+            "qa.runtime",
+            "content.review",
+            "record",
+            "deliver"
+          ]
+        },
+        "layer": {
+          "enum": [
+            "L1",
+            "L2",
+            "L3"
+          ]
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "BLOCKED",
+            "NOT_RUN",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "severity": {
+          "enum": [
+            "BLOCKER",
+            "ERROR",
+            "WARNING",
+            "INFO"
+          ]
+        },
+        "command": {
+          "type": "string"
+        },
+        "exit_code": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "log_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tool_versions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifactRef"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifactRef"
+          }
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtimeEvidence"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          }
+        },
+        "failure": {
+          "$ref": "#/$defs/failure"
+        },
+        "started_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ended_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "FAIL"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "failure"
+            ],
+            "properties": {
+              "exit_code": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "NOT_RUN"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "notes"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "NOT_RUN",
+                  "NOT_APPLICABLE",
+                  "BLOCKED"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "exit_code": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "counts",
+        "blocking_failures"
+      ],
+      "properties": {
+        "counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "PASS",
+            "FAIL",
+            "BLOCKED",
+            "NOT_RUN",
+            "NOT_APPLICABLE"
+          ],
+          "properties": {
+            "PASS": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "FAIL": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "BLOCKED": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "NOT_RUN": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "NOT_APPLICABLE": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "blocking_failures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "skipped": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

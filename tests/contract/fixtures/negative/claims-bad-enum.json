@@ -1,0 +1,17 @@
+{
+  "claim_id": "CLM-003",
+  "claim_text": "Negative fixture with a claim_type that is explicitly forbidden by the protocol.",
+  "claim_type": "CONTRADICTED",
+  "source_ids": ["SRC-001"],
+  "source_locators": [{"source_id": "SRC-001", "locator": "fixture://source#p1"}],
+  "inspection_scope": "negative fixture",
+  "scope_limit": "CONTRADICTED is not a claim_type",
+  "derivation_or_data": "N/A",
+  "evidence_status": "NOT_CHECKED",
+  "reasoning_status": "NOT_CHECKED",
+  "execution_status": "NOT_APPLICABLE",
+  "validation_status": "NOT_RUN",
+  "conflict_status": "NOT_CHECKED",
+  "used_in_artifact": [],
+  "review_notes": {"notes": "negative fixture", "decision": "PENDING"}
+}
