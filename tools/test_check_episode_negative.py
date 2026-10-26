@@ -96,6 +96,19 @@ class CheckEpisodeNegativeTests(unittest.TestCase):
         (ep / "handoff.md").write_text("# Handoff\n\nstage: test\n", encoding="utf-8")
         return ep
 
+    def add_fake_ffprobe(self, seconds: str = "25.0") -> dict | None:
+        """Create a POSIX ffprobe shim so CI does not need ffmpeg installed."""
+        if os.name == "nt":
+            return None
+        bin_dir = self.root / "fakebin"
+        bin_dir.mkdir(exist_ok=True)
+        path = bin_dir / "ffprobe"
+        path.write_text(f"#!/bin/sh\necho {seconds}\n", encoding="utf-8")
+        path.chmod(0o755)
+        env = os.environ.copy()
+        env["PATH"] = str(bin_dir) + os.pathsep + env.get("PATH", "")
+        return env
+
     def run_checker(
         self,
         slug: str,
@@ -164,24 +177,29 @@ class CheckEpisodeNegativeTests(unittest.TestCase):
 
     # 4. A real MP4 longer than 20 seconds.
     def test_timeout_mp4(self) -> None:
-        if not (shutil.which("ffmpeg") and shutil.which("ffprobe")):
-            self.skipTest("ffmpeg/ffprobe not available")
         ep = self.make_course()
         (ep / "02_scripts" / "lecture_script.md").write_text(
             "[SLIDE: 01]\n[ANIMATION: test]\n", encoding="utf-8"
         )
         (ep / "04_manim_src" / "scenes" / "test.py").write_text(SCENE_OK, encoding="utf-8")
         mp4 = ep / "03_slides" / "public" / "test.mp4"
-        subprocess.run(
-            [
-                "ffmpeg", "-y", "-f", "lavfi",
-                "-i", "color=c=black:s=64x64:d=25",
-                "-r", "1", "-c:v", "libx264", "-pix_fmt", "yuv420p",
-                str(mp4),
-            ],
-            capture_output=True, check=True, timeout=120,
-        )
-        proc = self.run_checker("ep", stage="manim", strict=True)
+        env = None
+        if shutil.which("ffmpeg") and shutil.which("ffprobe"):
+            subprocess.run(
+                [
+                    "ffmpeg", "-y", "-f", "lavfi",
+                    "-i", "color=c=black:s=64x64:d=25",
+                    "-r", "1", "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                    str(mp4),
+                ],
+                capture_output=True, check=True, timeout=120,
+            )
+        else:
+            mp4.write_bytes(b"not-a-real-video")
+            env = self.add_fake_ffprobe("25.0")
+            if env is None:
+                self.skipTest("ffmpeg/ffprobe not available and no POSIX fake")
+        proc = self.run_checker("ep", stage="manim", strict=True, env=env)
         self.assert_fails(proc, "exceeds 20s")
 
     # 5. Slidev build returns non-zero.

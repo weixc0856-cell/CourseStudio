@@ -175,7 +175,7 @@ git push
 - 步骤：
   1. `python -m py_compile tools/check-episode.py tools/check-links.py`
   2. `python tools/check-links.py .`
-  3. `python tools/test_check_episode_negative.py`
+  3. `python tools/test_check_episode_negative.py`（Linux 上用 fake `ffprobe`，不需要安装 ffmpeg）
 - 不做：flake8 扫描 vendored `paper-search-mcp`、空 pytest、Slidev build、Manim 渲染。
 
 本地等效检查：

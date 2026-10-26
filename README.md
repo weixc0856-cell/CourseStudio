@@ -134,7 +134,7 @@ courses/<slug>/
 
 `--stage qa --strict` 在 `course`/`technical` 下会实际运行 Slidev build；构建失败、ffprobe 时长超限、研究文件为空或 slide 编号重复/跳号，都不能算通过。检查器自身用 `python tools/test_check_episode_negative.py` 做 7 项负向回归；`[SLIDE]` 锚点数 `M` 与页数 `N` 必须满足 `M <= N`，并输出 mapping 报告。
 
-CI：GitHub Actions 使用 `ubuntu-24.04` + `actions/checkout@v7` + `actions/setup-python@v7`，执行 Python 语法检查、Markdown 链接检查和 7 项负向测试；不构建 Slidev，也不渲染 Manim。
+CI：GitHub Actions 使用 `ubuntu-24.04` + `actions/checkout@v7` + `actions/setup-python@v7`，执行 Python 语法检查、Markdown 链接检查和 7 项负向测试（Linux 上用 fake `ffprobe`，避免因缺少 ffmpeg 跳过）；不构建 Slidev，也不渲染 Manim。
 
 ## 开始一次新任务
 

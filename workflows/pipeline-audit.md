@@ -158,7 +158,7 @@ Episode 目录契约
 | 真实 Episode 未跑 | 端到端内容质量未验证 | `NOT_RUN` |
 | `course-studio` 未完整端到端 | 讲稿长度/节奏仍需实测 | `PARTIAL` |
 | CI 不构建 Slidev / 不渲染 Manim | Runner 固定 `ubuntu-24.04`；CI 只保证语法、链接、负向测试 | 已知 |
-| CI 的 ffmpeg/PowerShell 依赖 | 负向测试可能跳过或退化 | 已做跳过/容错 |
+| CI 的 ffmpeg/PowerShell 依赖 | Linux 使用 fake `ffprobe`，7 项负向测试全部执行；Windows 无 ffmpeg 时该用例跳过 | 已容错 |
 | Skill 副本非全部链接 | 版本可能漂移 | `PARTIAL` |
 | 人工教学评审缺失 | 教学效果未验证 | `NOT_RUN` |
 
